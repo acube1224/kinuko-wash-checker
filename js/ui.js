@@ -230,6 +230,13 @@ function renderLoading() {
    ============================= */
 function renderResult(result) {
   const rc = RESULT_CONTENT[result.grade];
+  const ans = result.answers || {};
+
+  const colorWarningHTML = (ans.color === 'dark' || ans.color === 'multi') ? `
+  <div style="margin: 0 20px 4px; background:#fff0f0; border:1px solid #e8a0a0; border-radius:10px; padding:12px 16px; font-size:0.8rem; color:#c0392b; line-height:1.7;">
+    ⚠ <strong>色落ち・色移りの可能性があるためご注意ください。</strong><br>
+    洗う前に目立たない箇所で色落ちテストをおすすめします。他の衣類と分けて洗ってください。
+  </div>` : '';
 
   const chipsHTML = result.chips.map(chip => {
     const cls = chip.type === 'danger'  ? 'chip-c'
@@ -275,6 +282,8 @@ function renderResult(result) {
       💡 ${rc.recommend}
     </p>
   </div>
+
+  ${colorWarningHTML}
 
   <div class="btn-footer">
     ${buttonsHTML}
@@ -352,7 +361,8 @@ function renderDetail(result) {
 /* =============================
    ⑦ 洗う場合の注意点画面
    ============================= */
-function renderCaution(grade) {
+function renderCaution(grade, answers) {
+  answers = answers || {};
   const isB = grade === 'B';
 
   return `
@@ -365,10 +375,17 @@ function renderCaution(grade) {
 
   <div class="content">
     <h2 class="page-heading">洗う前に確認したいこと</h2>
+    ${(answers.color === 'dark' || answers.color === 'multi') ? `
+    <div style="background:#fff0f0; border:1px solid #e8a0a0; border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:0.8rem; color:#c0392b; line-height:1.7;">
+      ⚠ <strong>色落ち・色移りにご注意ください。</strong><br>
+      洗う前に目立たない箇所で色落ちテストをおすすめします。他の衣類と分けて洗い、白いタオル等に触れさせないようにしてください。
+    </div>` : ''}
+
+    ${(answers.material === 'silk' || answers.material === 'mix' && answers.silkFabric) ? `
     <p class="page-sub">
       正絹はとても繊細です。<br>
       <strong>やさしく・短時間で・無理をしない</strong>ことが大切です。
-    </p>
+    </p>` : ''}
 
     ${isB ? `
     <div style="background:var(--col-chip-b);border:1px solid rgba(160,118,75,0.2);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.78rem;color:var(--col-kincha);line-height:1.7;">

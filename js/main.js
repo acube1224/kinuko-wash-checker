@@ -33,7 +33,7 @@ const App = (() => {
       case 'loading':         html = renderLoading();                                    break;
       case 'result':          html = renderResult(state.result);                         break;
       case 'detail':          html = renderDetail(state.result);                         break;
-      case 'caution':         html = renderCaution(state.result.grade);                  break;
+      case 'caution':         html = renderCaution(state.result.grade, state.result.answers); break;
       case 'consult':         html = renderConsult(state.result.grade);                  break;
       case 'materialConfirm': html = renderMaterialConfirm(state.guessedMaterialLabel);  break;
     }

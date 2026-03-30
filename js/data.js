@@ -118,7 +118,7 @@ const QUESTIONS = [
       { id: 'white',   icon: '⬜', label: '白・生成り・ごく淡い色',       score: -1 },
       { id: 'light',   icon: '🌸', label: '淡色',                         score: 0 },
       { id: 'mid',     icon: '🎨', label: '中間色',                       score: 1 },
-      { id: 'dark',    icon: '🟥', label: '濃色（赤・濃茶・黒・紺など）', score: 3 },
+      { id: 'dark',    icon: '🟥', label: '濃色（赤・濃茶・黒・紺など）', score: 5 },
       { id: 'multi',   icon: '🌈', label: '多色・ぼかし',                 score: 2 },
       { id: 'unknown', icon: '❓', label: 'わからない',                   score: 1 }
     ],

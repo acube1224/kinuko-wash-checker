@@ -16,32 +16,7 @@ const QUESTIONS = [
     ],
     key: 'material'
   },
-  {
-    id: 2,
-    label: 'Q2 ／ 生地',
-    text: '生地の特徴に、\nいちばん近いものを選んでください',
-    hint: '表面を見たり、手でやさしく触れたりして選んでください。\nちりめんのような強い凹凸は注意が必要です。絽のようなとても薄い生地も慎重に扱う必要があります。',
-    choices: [
-      { id: 'smooth',   icon: '✨', label: '標準的な生地感',                       score: -1 },
-      { id: 'crepe',    icon: '⚠️', label: 'ちりめんのように、細かい凹凸が強い',  score: 5 },
-      { id: 'ro',       icon: '🎐', label: '絽（ろ）のように、かなり薄く透け感がある', score: 3 },
-      { id: 'unknown',  icon: '❓', label: 'わからない',                           score: 2 }
-    ],
-    key: 'fabric'
-  },
-  // Q1x: 素材推定（Q1で「わからない」を選んだ場合のみ表示・4問）
-  // ※ main.js で分岐して表示する特殊問（MATERIAL_GUESS_QUESTIONSを参照）
-  {
-    id: 'mg',
-    label: '素材を調べる',
-    text: '素材を調べるための質問をします',
-    hint: '',
-    choices: [],
-    key: 'materialGuess'  // プレースホルダー（実際はMATERIAL_GUESS_QUESTIONSを使用）
-  },
-
   // Q2s: 正絹専用の生地種類（Q1で正絹を選んだ場合のみ表示）
-  // ※ main.js で分岐して表示する特殊問
   {
     id: '2s',
     label: 'Q2 ／ 正絹の生地種類',
@@ -57,6 +32,28 @@ const QUESTIONS = [
       { id: 'unknown',   icon: '❓',  label: 'その他・わからない',       score: 2  }
     ],
     key: 'silkFabric'
+  },
+  // Q1x: 素材推定（Q1で「わからない」を選んだ場合のみ表示・4問）
+  {
+    id: 'mg',
+    label: '素材を調べる',
+    text: '素材を調べるための質問をします',
+    hint: '',
+    choices: [],
+    key: 'materialGuess'
+  },
+  {
+    id: 2,
+    label: 'Q2 ／ 生地',
+    text: '生地の特徴に、\nいちばん近いものを選んでください',
+    hint: '表面を見たり、手でやさしく触れたりして選んでください。\nちりめんのような強い凹凸は注意が必要です。絽のようなとても薄い生地も慎重に扱う必要があります。',
+    choices: [
+      { id: 'smooth',   icon: '✨', label: '標準的な生地感',                       score: -1 },
+      { id: 'crepe',    icon: '⚠️', label: 'ちりめんのように、細かい凹凸が強い',  score: 5 },
+      { id: 'ro',       icon: '🎐', label: '絽（ろ）のように、かなり薄く透け感がある', score: 3 },
+      { id: 'unknown',  icon: '❓', label: 'わからない',                           score: 2 }
+    ],
+    key: 'fabric'
   },
   {
     id: 3,

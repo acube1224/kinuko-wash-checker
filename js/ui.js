@@ -138,7 +138,7 @@ function renderQuestion(q, qIndex, answers, totalQ) {
       onclick="App.nextQuestion()"
       ${selected ? '' : 'disabled'}
     >
-      ${qIndex + 1 < totalQ ? '次の質問へ' : '結果を見る'}
+      ${q.key === 'material' ? '次へ' : (qIndex + 1 < totalQ ? '次の質問へ' : '結果を見る')}
     </button>
   </div>
 </div>`;

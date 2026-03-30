@@ -44,7 +44,8 @@ function calcJudgment(answers) {
   }
 
   // 正絹以外の場合：Q2のちりめん → 即C
-  if (answers.material !== 'silk' && answers.fabric === 'crepe') {
+  // 正絹でもQ2s「わからない」→Q2でちりめん凹凸を選んだ場合も即C
+  if (answers.fabric === 'crepe') {
     return buildResult('C', score, chips, detailNotes, answers);
   }
 

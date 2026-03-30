@@ -54,6 +54,36 @@ export default {
 };
 
 /* ============================================================
+   デバイス情報ヘルパー
+   ============================================================ */
+
+// IPアドレスをSHA-256でハッシュ化（元IPは復元不可）
+async function hashIP(ip) {
+  if (!ip) return null;
+  const data = new TextEncoder().encode(ip + '_kinuko_salt');
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0, 16);
+}
+
+// User-Agentを「OS + ブラウザ」の簡易ラベルに変換
+function parseDevice(ua) {
+  if (!ua) return 'unknown';
+  const u = ua.toLowerCase();
+  // OS判定
+  let os = 'PC';
+  if (u.includes('iphone'))       os = 'iPhone';
+  else if (u.includes('ipad'))    os = 'iPad';
+  else if (u.includes('android')) os = 'Android';
+  // ブラウザ判定
+  let br = 'Other';
+  if (u.includes('edg/'))                          br = 'Edge';
+  else if (u.includes('chrome') && !u.includes('chromium')) br = 'Chrome';
+  else if (u.includes('safari') && !u.includes('chrome'))   br = 'Safari';
+  else if (u.includes('firefox'))                  br = 'Firefox';
+  return `${os} ${br}`;
+}
+
+/* ============================================================
    認証ヘルパー
    ============================================================ */
 function generateToken() {
@@ -84,19 +114,27 @@ async function handleSaveLog(request, env) {
     } = body;
 
     const referrer = request.headers.get('Referer') || '';
+    const ua       = request.headers.get('User-Agent') || '';
+    const ip       = request.headers.get('CF-Connecting-IP') ||
+                     request.headers.get('X-Forwarded-For')?.split(',')[0].trim() || '';
+
+    const ip_hash = await hashIP(ip);
+    const device  = parseDevice(ua);
 
     await env.kinuko_logs.prepare(`
       INSERT INTO diagnosis_logs
         (grade, score, duration_sec, session_id, referrer,
          ans_material, ans_silk_fabric, ans_fabric,
          ans_tailoring, ans_decoration, ans_water_history,
-         ans_past_result, ans_color)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+         ans_past_result, ans_color,
+         ip_hash, device)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       grade, score, duration_sec || null, session_id || null, referrer,
       ans_material || null, ans_silk_fabric || null, ans_fabric || null,
       ans_tailoring || null, ans_decoration || null, ans_water_history || null,
-      ans_past_result || null, ans_color || null
+      ans_past_result || null, ans_color || null,
+      ip_hash || null, device || null
     ).run();
 
     return new Response(JSON.stringify({ ok: true }), {
@@ -156,7 +194,18 @@ async function handleAdminData(request, env, url) {
     `SELECT * FROM diagnosis_logs ${whereSQL} ORDER BY created_at DESC LIMIT ? OFFSET ?`
   ).bind(...params, perPage, offset).all();
 
-  return new Response(JSON.stringify({ rows: rows.results, total: total.cnt, page, perPage }), {
+  // ip_hashごとの総件数を取得（重複判別用）
+  const ipCounts = {};
+  const hashes = [...new Set(rows.results.map(r => r.ip_hash).filter(Boolean))];
+  if (hashes.length > 0) {
+    const ph = hashes.map(() => '?').join(',');
+    const ipRows = await env.kinuko_logs.prepare(
+      `SELECT ip_hash, COUNT(*) as cnt FROM diagnosis_logs WHERE ip_hash IN (${ph}) GROUP BY ip_hash`
+    ).bind(...hashes).all();
+    ipRows.results.forEach(r => { ipCounts[r.ip_hash] = r.cnt; });
+  }
+
+  return new Response(JSON.stringify({ rows: rows.results, total: total.cnt, page, perPage, ipCounts }), {
     headers: { 'Content-Type': 'application/json' }
   });
 }
@@ -379,6 +428,7 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
 .badge-B { background: #fdf3e3; color: #a0764b; }
 .badge-C { background: #fdecea; color: #8b3a3a; }
 .badge-test { background: #fff0e0; color: #e67e22; }
+.badge-dup  { background: #fdecea; color: #c0392b; font-weight: 700; }
 .pagination { display: flex; gap: 6px; justify-content: center; margin-top: 16px; }
 .pagination button { padding: 5px 12px; border: 1px solid #ddd; border-radius: 5px; background: #fff; cursor: pointer; font-size: 0.8rem; }
 .pagination button.active { background: #4a7c6f; color: #fff; border-color: #4a7c6f; }
@@ -441,7 +491,7 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
           <th><input type="checkbox" id="check-all" onchange="toggleAll(this)"></th>
           <th>ID</th><th>日時</th><th>判定</th><th>スコア</th>
           <th>素材</th><th>生地</th><th>仕立て</th><th>装飾</th>
-          <th>水処理</th><th>地色</th><th>秒</th><th>操作</th>
+          <th>水処理</th><th>地色</th><th>端末</th><th>重複</th><th>秒</th><th>操作</th>
         </tr>
       </thead>
       <tbody id="log-tbody">
@@ -594,12 +644,21 @@ async function loadLogs(page) {
 
   const tbody = document.getElementById('log-tbody');
   if (!d.rows.length) {
-    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:20px;color:#aaa;">データがありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center;padding:20px;color:#aaa;">データがありません</td></tr>';
     document.getElementById('pagination').innerHTML = '';
     return;
   }
 
-  tbody.innerHTML = d.rows.map(r => \`
+  tbody.innerHTML = d.rows.map(r => {
+    const ipCnt = r.ip_hash ? (d.ipCounts[r.ip_hash] || 1) : null;
+    const dupBadge = ipCnt && ipCnt > 1
+      ? \`<span class="badge badge-dup" title="同一端末から\${ipCnt}回">\${ipCnt}回</span>\`
+      : '<span style="color:#ccc;font-size:0.7rem">-</span>';
+    const devIcon = !r.device ? '' :
+      r.device.startsWith('iPhone') ? '📱' :
+      r.device.startsWith('Android') ? '🤖' :
+      r.device.startsWith('iPad') ? '📋' : '💻';
+    return \`
     <tr class="\${r.is_test ? 'test-row' : ''}">
       <td><input type="checkbox" class="row-check" value="\${r.id}"></td>
       <td>\${r.id}</td>
@@ -612,6 +671,8 @@ async function loadLogs(page) {
       <td>\${lbl('decoration', r.ans_decoration)}</td>
       <td>\${lbl('waterHistory', r.ans_water_history)}</td>
       <td>\${lbl('color', r.ans_color)}</td>
+      <td style="font-size:0.75rem">\${devIcon} \${r.device || '-'}</td>
+      <td style="text-align:center">\${dupBadge}</td>
       <td>\${r.duration_sec || '-'}</td>
       <td>
         <button class="btn-sm \${r.is_test ? 'btn-green' : 'btn-orange'}" onclick="toggleFlag(\${r.id}, \${r.is_test ? 0 : 1})">
@@ -619,8 +680,8 @@ async function loadLogs(page) {
         </button>
         <button class="btn-sm btn-red" onclick="deleteOne(\${r.id})">削除</button>
       </td>
-    </tr>
-  \`).join('');
+    </tr>\`;
+  }).join('');
 
   // ページネーション
   const totalPages = Math.ceil(d.total / d.perPage);

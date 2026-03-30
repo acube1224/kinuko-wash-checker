@@ -170,6 +170,18 @@ const App = (() => {
         state.mgIndex = 0;
         state.mgActive = false;
       }
+      // Q2（通常生地）から戻るとき：正絹ルートでsilkFabricが'unknown'の場合は、Q2sに戻る
+      if (state.answers.material === 'silk' && state.answers.silkFabric === 'unknown') {
+        const list = getPostMaterialQuestionList();
+        const curKey = list[state.qIndex]?.key;
+        if (curKey === 'fabric') {
+          // fabricを削除してQ2sの位置へ
+          delete state.answers.fabric;
+          const silkList = QUESTIONS.filter(q => q.key !== 'fabric' && q.key !== 'materialGuess');
+          const silkFabricIdx = silkList.findIndex(q => q.key === 'silkFabric');
+          state.qIndex = silkFabricIdx !== -1 ? silkFabricIdx : state.qIndex;
+        }
+      }
     }
     render();
   }
@@ -234,9 +246,17 @@ const App = (() => {
     let list;
 
     if (mat === 'silk') {
-      list = QUESTIONS.filter(q => q.key !== 'fabric' && q.key !== 'materialGuess');
+      // 正絹ルート：Q1 → Q2s → Q3以降
+      // Q2sで「わからない」を選んだ場合は fabric（通常生地質問）も挿入
+      if (state.answers.silkFabric === 'unknown') {
+        // Q2s → Q2（通常）→ Q3以降
+        list = QUESTIONS.filter(q => q.key !== 'materialGuess');
+      } else {
+        // Q2s → Q3以降（fabricは不要）
+        list = QUESTIONS.filter(q => q.key !== 'fabric' && q.key !== 'materialGuess');
+      }
     } else {
-      // mix
+      // 混紡ルート：Q1 → Q2（通常）→ Q3以降
       list = QUESTIONS.filter(q => q.key !== 'silkFabric' && q.key !== 'materialGuess');
     }
 
@@ -331,6 +351,17 @@ const App = (() => {
 
     // Q2以降の通常進行
     const list = getPostMaterialQuestionList();
+
+    // Q2sで「わからない」を選んだ → Q2（通常生地特徴）へ長ぶ
+    if (currentQ.key === 'silkFabric' && state.answers.silkFabric === 'unknown') {
+      // リストが再構築される（fabricが挿入される）ので、fabricのインデックスを取得
+      const newList = getPostMaterialQuestionList();
+      const fabricIdx = newList.findIndex(q => q.key === 'fabric');
+      state.qIndex = fabricIdx !== -1 ? fabricIdx : state.qIndex + 1;
+      render();
+      return;
+    }
+
     if (state.qIndex + 1 >= list.length) {
       state.screen = 'loading';
       render();

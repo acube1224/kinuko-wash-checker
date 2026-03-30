@@ -267,7 +267,7 @@ function renderResult(result) {
     <span class="result-badge ${rc.badgeClass}">${rc.badge}</span>
     <div class="result-icon">${rc.icon}</div>
     <h2 class="result-title">${rc.title}</h2>
-    <p class="result-desc">${rc.desc.replace(/\n/g, '<br><br>')}</p>
+    <p class="result-desc">${rc.desc.replace(/\n/g, '<br><br>')}${(ans.material === 'silk') ? '<br><br>ただし、正絹はとても繊細です。強くこすらない・長く浸けない・やさしく短時間で扱うことが大切です。' : ''}</p>
   </div>
 
   <div class="reason-section">

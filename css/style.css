@@ -435,13 +435,13 @@ html, body {
   color: #fff;
   border: none;
   border-radius: var(--radius-btn);
-  padding: 14px 24px;
+  padding: 17px 24px;
   font-family: var(--font-sans);
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   box-shadow: 0 3px 12px rgba(224, 122, 32, 0.3);
 }
 

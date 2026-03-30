@@ -183,7 +183,9 @@ function renderResult(result) {
     if (btn.style === 'kincha')    cls = 'btn-kincha';
     if (btn.style === 'orange')    cls = 'btn-orange';
     if (btn.style === 'skyblue')   cls = 'btn-skyblue';
-    return `<button class="${cls}" onclick="App.resultAction('${btn.action}')">${btn.label}</button>`;
+    const isBold = (btn.style === 'orange' || btn.style === 'skyblue' || btn.style === 'primary');
+    const labelHTML = isBold ? `<strong>${btn.label}</strong>` : btn.label;
+    return `<button class="${cls}" onclick="App.resultAction('${btn.action}')">${labelHTML}</button>`;
   }).join('');
 
   return `
@@ -348,8 +350,9 @@ function renderCaution(grade) {
       <div class="caution-item">
         <span class="caution-icon">💨</span>
         <div class="caution-text">
-          <strong>陰干しで乾かす</strong>
+          <strong>風通しの良い場所で陰干し</strong>
           <span>直射日光や乾燥機は避け、風通しの良い日陰で形を整えながら干してください。</span>
+          <span style="color:#c0392b;font-weight:500;">着物用ハンガーを使って横にひっぱるようにして形を整えて掛けましょう。干し方は縮みの結果に大きく左右しますので面倒くさがらずに丁寧に行いましょう。</span>
         </div>
       </div>
       <div class="caution-item">

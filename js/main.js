@@ -12,7 +12,8 @@ const App = (() => {
     silkFabricUnknown: false, // Q2s「わからない」→Q2通常へ分岐中フラグ
     answers:   {},
     guessedMaterialLabel: null,
-    result:    null
+    result:    null,
+    startTime: null         // 診断開始時刻
   };
 
   const $app = document.getElementById('app');
@@ -122,6 +123,7 @@ const App = (() => {
     state.silkFabricUnknown = false;
     state.answers = {};
     state.guessedMaterialLabel = null;
+    state.startTime = Date.now(); // 診断開始時刻を記録
     render();
   }
 
@@ -291,6 +293,7 @@ const App = (() => {
       render();
       setTimeout(() => {
         state.result = calcJudgment(state.answers);
+        saveLog(state.result);
         state.screen = 'result';
         render();
       }, 1600);
@@ -322,6 +325,7 @@ const App = (() => {
       render();
       setTimeout(() => {
         state.result = calcJudgment(state.answers);
+        saveLog(state.result);
         state.screen = 'result';
         render();
       }, 1600);
@@ -365,6 +369,7 @@ const App = (() => {
         render();
         setTimeout(() => {
           state.result = calcJudgment(state.answers);
+          saveLog(state.result);
           state.screen = 'result';
           render();
         }, 1600);
@@ -394,6 +399,37 @@ const App = (() => {
       case 'caution': state.screen = 'caution'; render(); break;
       case 'consult': state.screen = 'consult'; render(); break;
       case 'retry':   goTop(); break;
+    }
+  }
+
+  /* ── 診断ログ保存 ── */
+  function saveLog(result) {
+    try {
+      const duration = state.startTime
+        ? Math.round((Date.now() - state.startTime) / 1000)
+        : null;
+      const sessionId = 'ks_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+      const payload = {
+        grade:            result.grade,
+        score:            result.score,
+        duration_sec:     duration,
+        session_id:       sessionId,
+        ans_material:     result.answers.material      || null,
+        ans_silk_fabric:  result.answers.silkFabric    || null,
+        ans_fabric:       result.answers.fabric        || null,
+        ans_tailoring:    result.answers.tailoring     || null,
+        ans_decoration:   result.answers.decoration    || null,
+        ans_water_history:result.answers.waterHistory  || null,
+        ans_past_result:  result.answers.pastResult    || null,
+        ans_color:        result.answers.color         || null
+      };
+      fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {}); // エラーは無視（ユーザーへの影響なし）
+    } catch (e) {
+      // ログ保存失敗はサイレントに無視
     }
   }
 

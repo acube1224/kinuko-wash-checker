@@ -61,13 +61,15 @@ const QUESTIONS = [
   {
     id: 3,
     label: 'Q3 ／ 仕立て',
-    text: '仕立ての特徴に、\nいちばん近いものを選んでください',
-    hint: 'ひとえ単は比較的シンプルな仕立てです。ふたえや異素材あわせは、部分ごとの縮み方の違いによって、縫い目にヨレやつれが出ることがあります。',
+    text: '仕立ての種類に、\nいちばん近いものを選んでください',
+    hint: 'ひとえはシンプルで洗いやすい構造です。袷・無双・居敷当付きなどは、部分ごとの縮み方の違いによって縫い目にヨレやつれが出ることがあります。',
     choices: [
-      { id: 'hitoe',   icon: '👘', label: 'ひとえ（単）',                 score: -1 },
-      { id: 'futae',   icon: '🔀', label: 'あわせ（袷）',                 score: 3 },
-      { id: 'mixed',   icon: '🧵', label: '異なる生地が組み合わされている', score: 3 },
-      { id: 'unknown', icon: '❓', label: 'わからない',                   score: 2 }
+      { id: 'hitoe',    icon: '👘', label: 'ひとえ（単）',          score: -1 },
+      { id: 'awase',    icon: '🔀', label: 'あわせ（袷）',           score: 4 },
+      { id: 'muso',     icon: '🧵', label: '袖無双の胴抜き',         score: 3 },
+      { id: 'hanmuso',  icon: '🪡', label: '半無双',                 score: 2 },
+      { id: 'shikiate', icon: '🧷', label: '居敷当付き',             score: 3 },
+      { id: 'unknown',  icon: '❓', label: 'わからない',             score: 2 }
     ],
     key: 'tailoring'
   },
@@ -218,10 +220,12 @@ const REASON_CHIPS = {
   silkFabric_unknown:  { label: '生地種類が不明',             type: 'caution' },
 
   // 仕立て
-  tailoring_hitoe:   { label: 'ひとえ（単）',            type: 'safe' },
-  tailoring_futae:   { label: 'あわせ（袷）（ヨレ注意）', type: 'caution' },
-  tailoring_mixed:   { label: '異素材あわせ（ヨレ注意）', type: 'caution' },
-  tailoring_unknown: { label: '仕立てが不明',          type: 'caution' },
+  tailoring_hitoe:    { label: 'ひとえ（単）',              type: 'safe'    },
+  tailoring_awase:    { label: 'あわせ（袷）（ヨレ注意）',  type: 'caution' },
+  tailoring_muso:     { label: '袖無双の胴抜き（袖口注意）', type: 'caution' },
+  tailoring_hanmuso:  { label: '半無双（縮み差注意）',       type: 'caution' },
+  tailoring_shikiate: { label: '居敷当付き（縮み差注意）',   type: 'caution' },
+  tailoring_unknown:  { label: '仕立てが不明',               type: 'caution' },
 
   // 装飾
   decoration_yes:     { label: '繊細な加工あり',   type: 'danger' },
@@ -271,9 +275,11 @@ const DETAIL_NOTES = {
   silkFabric_ro:       '絽・紗は隙間があるため水抜けは良いですが、目が荒いので型崩れには注意が必要です。',
 
   // 仕立て
-  tailoring_futae:  'あわせ仕立ては2枚の生地の収縮率の違いにより、縫い目にヨレが出ることがあります。',
-  tailoring_mixed:  '異なる素材を組み合わせた仕立ては、部分ごとの縮み方の差から縫い目のつれや波打ちが生じる場合があります。',
-  tailoring_hitoe:  'ひとえ単はシンプルな仕立てのため、仕立て構造上のリスクは比較的少なめです。',
+  tailoring_hitoe:    'ひとえ単はシンプルな仕立てのため、仕立て構造上のリスクは比較的少なめです。',
+  tailoring_awase:    'あわせ仕立ては表地と裏地の収縮率の違いにより、縫い目にヨレが出ることがあります。',
+  tailoring_muso:     '袖無双の胴抜きは袖部分が二重構造のため、袖口周辺に縮み差によるヨレが出ることがあります。',
+  tailoring_hanmuso:  '半無双は袖の一部が二重構造です。部分的な縮み差に注意して洗いましょう。',
+  tailoring_shikiate: '居敷当付きは後ろ身頃に当て布があり、当て布との縮み差で波打ちが生じる場合があります。',
 
   // 装飾
   decoration_yes: '金彩・箔・刺繍などの繊細な加工は、水に触れることで剥落や変形、ほつれが起きる場合があります。',

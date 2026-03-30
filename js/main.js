@@ -70,6 +70,8 @@ const App = (() => {
     state.qIndex  = 0;
     state.answers = {};
     state.result  = null;
+    state.mgIndex = 0;
+    state.guessedMaterialLabel = null;
     render();
   }
 
@@ -83,6 +85,7 @@ const App = (() => {
     state.qIndex  = 0;
     state.mgIndex = 0;
     state.answers = {};
+    state.guessedMaterialLabel = null;
     render();
   }
 
@@ -121,14 +124,62 @@ const App = (() => {
     render();
   }
 
+  // ── selectChoice: 素材推定フェーズ中はrender()を呼ばない ──
+  // render()内でguessMaterial()が呼ばれ、途中回答状態で誤判定が起きるのを防ぐ
   function selectChoice(key, id) {
     state.answers[key] = id;
-    render();
 
-    // 選択後、少し遅らせて次へボタンを有効化（すでにrenderで済んでいる）
-    // スマホ向けに選択確認のフォーカスをスムーズに
+    // 素材推定4問フェーズ中はDOMを直接操作してselected表示を更新
+    if (state.answers.material === 'unknown' && isInMaterialGuessRaw()) {
+      document.querySelectorAll('.choice-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      document.querySelectorAll(`.choice-btn[data-key="${key}"][data-id="${id}"]`).forEach(btn => {
+        btn.classList.add('selected');
+      });
+      const nextBtn = document.getElementById('next-btn');
+      if (nextBtn) nextBtn.disabled = false;
+      return;
+    }
+
+    render();
     const nextBtn = document.getElementById('next-btn');
     if (nextBtn) nextBtn.disabled = false;
+  }
+
+  // メイン質問リスト（素材推定4問を除く）
+  // ※ guessMaterial()を呼ばない安全バージョン（素材推定フェーズ検出用）
+  function getMainQuestionListSafe() {
+    let list;
+    const mat = state.answers.material;
+
+    if (mat === 'other') {
+      list = QUESTIONS.filter(q => q.key === 'material');
+    } else if (mat === 'silk') {
+      list = QUESTIONS.filter(q => q.key !== 'fabric' && q.key !== 'materialGuess');
+    } else if (mat === 'mix') {
+      list = QUESTIONS.filter(q => q.key !== 'silkFabric' && q.key !== 'materialGuess');
+    } else if (mat === 'unknown') {
+      // わからない → materialGuessプレースホルダーを含むルート
+      list = QUESTIONS.filter(q => q.key !== 'fabric' && q.key !== 'silkFabric');
+    } else {
+      list = QUESTIONS.filter(q => q.key !== 'silkFabric' && q.key !== 'materialGuess');
+    }
+
+    const waterHistory = state.answers.waterHistory;
+    if (waterHistory === 'no' || waterHistory === 'unknown') {
+      list = list.filter(q => q.key !== 'pastResult');
+    }
+
+    return list;
+  }
+
+  // 素材推定4問フェーズ中かどうか（guessMaterial不使用）
+  function isInMaterialGuessRaw() {
+    if (state.answers.material !== 'unknown') return false;
+    const mainList = getMainQuestionListSafe();
+    const mgPlaceholderIndex = mainList.findIndex(q => q.key === 'materialGuess');
+    return mgPlaceholderIndex !== -1 && state.qIndex === mgPlaceholderIndex;
   }
 
   // メイン質問リスト（素材推定4問を除く）
@@ -212,7 +263,7 @@ const App = (() => {
     if (!state.answers[currentQ.key]) return; // 未選択ならスキップ
 
     // 素材推定4問フェーズ中の場合
-    if (state.answers.material === 'unknown' && isInMaterialGuess()) {
+    if (state.answers.material === 'unknown' && isInMaterialGuessRaw()) {
       if (state.mgIndex + 1 < MATERIAL_GUESS_QUESTIONS.length) {
         // 次の素材推定問へ
         state.mgIndex++;
@@ -253,32 +304,46 @@ const App = (() => {
   /* ── 素材推定確認画面のアクション ── */
   function confirmMaterial(accepted) {
     if (accepted) {
-      // 「はい」→ 推定結果を answers.material に反映して次へ
       const guessed = state.guessedMaterialLabel.key;
-      if (guessed === 'silk') {
-        state.answers.material = 'silk';
-      } else if (guessed === 'poly') {
-        state.answers.material = 'other';
-      } else {
-        state.answers.material = 'mix';
-      }
+
+      // answers.materialを変える前に、materialGuessのインデックスを取得
+      // この時点ではまだ material === 'unknown' なので getMainQuestionListSafe() が正しく動く
+      const mainListBefore = getMainQuestionListSafe();
+      const mgIdx = mainListBefore.findIndex(q => q.key === 'materialGuess');
+
+      state.guessedMaterialLabel = null;
       state.mgIndex = 0;
-      state.screen = 'question';
-      // materialGuessプレースホルダーの次へ進む
-      const mainList = getMainQuestionList();
-      const mgIdx = mainList.findIndex(q => q.key === 'materialGuess');
-      if (mgIdx !== -1) {
-        state.qIndex = mgIdx + 1;
-      } else {
-        state.qIndex++;
+
+      if (guessed === 'poly') {
+        // 化繊 → 即A判定へ
+        state.answers.material = 'other';
+        state.screen = 'loading';
+        render();
+        setTimeout(() => {
+          state.result = calcJudgment(state.answers);
+          state.screen = 'result';
+          render();
+        }, 1600);
+        return;
       }
+
+      // 正絹 or 混紡 → 次の質問へ
+      state.answers.material = (guessed === 'silk') ? 'silk' : 'mix';
+      state.screen = 'question';
+      state.qIndex = (mgIdx !== -1) ? mgIdx + 1 : 1;
       render();
+
     } else {
       // 「いいえ」→ 素材推定4問の最初に戻る
+      // answers.material は 'unknown' のままにして4問を再度表示
       MATERIAL_GUESS_QUESTIONS.forEach(q => delete state.answers[q.key]);
       state.mgIndex = 0;
       state.guessedMaterialLabel = null;
       state.screen = 'question';
+      // materialGuessプレースホルダーの位置に戻す
+      const mainList = getMainQuestionListSafe(); // material==='unknown' のリスト
+      const mgIdx = mainList.findIndex(q => q.key === 'materialGuess');
+      state.qIndex = (mgIdx !== -1) ? mgIdx : 1;
       render();
     }
   }
@@ -313,20 +378,16 @@ const App = (() => {
   /* ── iframe高さ自動通知 ── */
   function notifyHeight() {
     const h = document.body.scrollHeight;
-    // 親ページ（WordPress）へ高さを送信
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'kinuko-resize', height: h }, '*');
     }
   }
 
-  // 画面変化のたびに高さを通知
   function observeHeight() {
-    // ResizeObserver で動的な高さ変化を監視
     if (typeof ResizeObserver !== 'undefined') {
       const ro = new ResizeObserver(() => notifyHeight());
       ro.observe(document.body);
     }
-    // 念のためMutationObserverも併用
     const mo = new MutationObserver(() => notifyHeight());
     mo.observe(document.getElementById('app'), { childList: true, subtree: true });
   }
@@ -335,7 +396,6 @@ const App = (() => {
   function init() {
     render();
     observeHeight();
-    // 初回ロード後に高さ通知
     setTimeout(notifyHeight, 300);
   }
 

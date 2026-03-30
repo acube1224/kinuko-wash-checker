@@ -97,6 +97,8 @@ function renderQuestion(q, qIndex, answers, totalQ) {
     <li>
       <button
         class="choice-btn ${selected === c.id ? 'selected' : ''}"
+        data-key="${q.key}"
+        data-id="${c.id}"
         onclick="App.selectChoice('${q.key}', '${c.id}')"
       >
         <span class="choice-icon">${c.icon}</span>

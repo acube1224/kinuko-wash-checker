@@ -29,6 +29,17 @@ const QUESTIONS = [
     ],
     key: 'fabric'
   },
+  // Q1x: 素材推定（Q1で「わからない」を選んだ場合のみ表示・4問）
+  // ※ main.js で分岐して表示する特殊問（MATERIAL_GUESS_QUESTIONSを参照）
+  {
+    id: 'mg',
+    label: '素材を調べる',
+    text: '素材を調べるための質問をします',
+    hint: '',
+    choices: [],
+    key: 'materialGuess'  // プレースホルダー（実際はMATERIAL_GUESS_QUESTIONSを使用）
+  },
+
   // Q2s: 正絹専用の生地種類（Q1で正絹を選んだ場合のみ表示）
   // ※ main.js で分岐して表示する特殊問
   {
@@ -116,6 +127,68 @@ const QUESTIONS = [
   }
 ];
 
+
+/* =================================
+   素材推定質問（Q1で「わからない」を選んだ場合のみ表示）
+   4問の回答から正絹／化繊／混紡を推定する
+   ================================= */
+const MATERIAL_GUESS_QUESTIONS = [
+  {
+    id: 'mg1',
+    label: '素材を調べる ① ／ 光沢',
+    text: '生地の光沢はどのように見えますか？',
+    hint: '自然光や室内灯の下で生地を動かしながら確認してください。',
+    choices: [
+      { id: 'silk',  icon: '✨', label: '上品で深い光沢・角度で色が変わるぬめり感',  point: { silk: 1 } },
+      { id: 'poly',  icon: '💡', label: '均一でテカっとした光沢（やや安っぽい）',    point: { poly: 1 } },
+      { id: 'mat',   icon: '🪨', label: '光沢がほぼない・マットな印象',              point: { mix: 1 }  },
+      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+    ],
+    key: 'mg_gloss'
+  },
+  {
+    id: 'mg2',
+    label: '素材を調べる ② ／ 手触り',
+    text: '生地を触ったときの感触はどれに近いですか？',
+    hint: '手のひらでやさしく触れて確認してください。',
+    choices: [
+      { id: 'silk',  icon: '🌿', label: 'ひんやり・しっとりした感触',                point: { silk: 1 } },
+      { id: 'poly',  icon: '🪡', label: 'ツルツル or カサカサ（人工的な感触）',      point: { poly: 1 } },
+      { id: 'wool',  icon: '🧶', label: 'ふんわり暖かい・やや毛羽立ちがある',        point: { mix: 1 }  },
+      { id: 'cotton',icon: '🌾', label: 'サラッと乾いた感じ',                        point: { mix: 1 }  },
+      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+    ],
+    key: 'mg_touch'
+  },
+  {
+    id: 'mg3',
+    label: '素材を調べる ③ ／ シワの戻り方',
+    text: '生地を軽く握って離すと、シワはどうなりますか？',
+    hint: '目立たない部分を5秒ほど軽く握ってから離して確認してください。',
+    choices: [
+      { id: 'silk',  icon: '🌀', label: '細かいシワができてすぐ戻る',                point: { silk: 1 } },
+      { id: 'poly',  icon: '📄', label: 'ほぼシワにならない',                        point: { poly: 1 } },
+      { id: 'cotton',icon: '📝', label: 'くっきりシワが残る',                        point: { mix: 1 }  },
+      { id: 'wool',  icon: '🔄', label: 'ゆるく戻る（完全には戻らない）',            point: { mix: 1 }  },
+      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+    ],
+    key: 'mg_wrinkle'
+  },
+  {
+    id: 'mg4',
+    label: '素材を調べる ④ ／ 音',
+    text: '生地同士を軽く擦り合わせると、どんな音がしますか？',
+    hint: '生地を両手で持ち、やさしく擦り合わせて確認してください。',
+    choices: [
+      { id: 'silk',  icon: '🎵', label: 'キュッキュッという音（絹鳴り）',            point: { silk: 1 } },
+      { id: 'poly',  icon: '📢', label: 'シャカシャカという音',                      point: { poly: 1 } },
+      { id: 'cotton',icon: '🔇', label: 'ほぼ音がしない',                            point: { mix: 1 }  },
+      { id: 'wool',  icon: '🧸', label: 'モフっとした感じで音がしない',              point: { mix: 1 }  },
+      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+    ],
+    key: 'mg_sound'
+  }
+];
 
 /* =================================
    判定に使う「理由チップ」マッピング

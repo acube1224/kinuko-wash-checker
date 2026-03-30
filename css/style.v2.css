@@ -59,6 +59,7 @@ html, body {
   flex-direction: column;
   padding: 0 0 40px;
   animation: fadeIn 0.35s ease;
+  background: #ffffff !important;
 }
 
 @keyframes fadeIn {
@@ -427,6 +428,50 @@ html, body {
 .btn-kincha:hover {
   background: #8c6438;
   transform: translateY(-1px);
+}
+
+.btn-orange {
+  width: 100%;
+  background: #e07a20;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 17px 24px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.06em;
+  box-shadow: 0 3px 12px rgba(224, 122, 32, 0.3);
+}
+
+.btn-orange:hover {
+  background: #c46a10;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(224, 122, 32, 0.35);
+}
+
+.btn-skyblue {
+  width: 100%;
+  background: #3daed4;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 17px 24px;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.06em;
+  box-shadow: 0 3px 12px rgba(61, 174, 212, 0.3);
+}
+
+.btn-skyblue:hover {
+  background: #2b96ba;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(61, 174, 212, 0.35);
 }
 
 /* ── ボタンフッター ── */

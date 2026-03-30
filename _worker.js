@@ -348,10 +348,17 @@ header span { font-size: 0.75rem; opacity: 0.8; }
 .stat-card .num.B { color: #a0764b; }
 .stat-card .num.C { color: #8b3a3a; }
 .stat-card .lbl { font-size: 0.72rem; color: #999; margin-top: 4px; }
-.charts { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.chart-box { background: #f9f5f1; border-radius: 10px; padding: 16px; }
-.chart-box h3 { font-size: 0.82rem; color: #666; margin-bottom: 12px; }
-@media(max-width:600px){ .charts { grid-template-columns: 1fr; } }
+.charts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.chart-box { background: #f9f5f1; border-radius: 10px; padding: 12px; min-width: 0; }
+.chart-box h3 { font-size: 0.75rem; color: #666; margin-bottom: 10px; text-align: center; }
+.chart-box canvas { max-height: 180px; }
+/* タブレット：3列 */
+@media(max-width:1100px){ .charts { grid-template-columns: repeat(3, 1fr); } }
+/* スマホ：2列 */
+@media(max-width:600px){ .charts { grid-template-columns: repeat(2, 1fr); gap: 10px; } }
+@media(max-width:600px){ .chart-box { padding: 10px; } }
+@media(max-width:600px){ .chart-box h3 { font-size: 0.7rem; } }
+@media(max-width:600px){ .chart-box canvas { max-height: 150px; } }
 
 /* ログ一覧 */
 .toolbar { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
@@ -566,7 +573,7 @@ function makeChart(id, type, labels, data, colors) {
   if (chartInstances[id]) { chartInstances[id].destroy(); }
   const opts = type === 'bar'
     ? { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
-    : { plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10, boxWidth: 14 } } } };
+    : { plugins: { legend: { position: 'bottom', labels: { font: { size: 10 }, padding: 6, boxWidth: 10 } } } };
   chartInstances[id] = new Chart(document.getElementById(id), {
     type,
     data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 1 }] },

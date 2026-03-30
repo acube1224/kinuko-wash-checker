@@ -50,8 +50,7 @@ const QUESTIONS = [
     choices: [
       { id: 'smooth',   icon: '✨', label: '標準的な生地感',                       score: -1 },
       { id: 'crepe',    icon: '⚠️', label: 'ちりめんのように、細かい凹凸が強い',  score: 5 },
-      { id: 'ro',       icon: '🎐', label: '絽（ろ）のように、かなり薄く透け感がある', score: 3 },
-      { id: 'unknown',  icon: '❓', label: 'わからない',                           score: 2 }
+      { id: 'ro',       icon: '🎐', label: '絽（ろ）のように、かなり薄く透け感がある', score: 3 }
     ],
     key: 'fabric'
   },
@@ -65,8 +64,7 @@ const QUESTIONS = [
       { id: 'awase',    icon: '🔀', label: 'あわせ（袷）',           score: 4 },
       { id: 'muso',     icon: '🧵', label: '袖無双の胴抜き',         score: 3 },
       { id: 'hanmuso',  icon: '🪡', label: '半無双',                 score: 2 },
-      { id: 'shikiate', icon: '🧷', label: '居敷当付き',             score: 3 },
-      { id: 'unknown',  icon: '❓', label: 'わからない',             score: 2 }
+      { id: 'shikiate', icon: '🧷', label: '居敷当付き',             score: 3 }
     ],
     key: 'tailoring'
   },
@@ -77,8 +75,7 @@ const QUESTIONS = [
     hint: 'きらっと見える加工や、盛り上がった装飾、刺繍のあるものは、洗うことで風合いや見た目が変わる場合があります。',
     choices: [
       { id: 'yes',     icon: '✨', label: 'ある',        score: 4 },
-      { id: 'no',      icon: '👍', label: 'ない',        score: -1 },
-      { id: 'unknown', icon: '❓', label: 'わからない',  score: 2 }
+      { id: 'no',      icon: '👍', label: 'ない',        score: -1 }
     ],
     key: 'decoration'
   },
@@ -104,8 +101,7 @@ const QUESTIONS = [
       { id: 'smallshrink', icon: '🙆', label: '数ミリ程度の縮みはあったが気にならない', score: 0 },
       { id: 'shrink',      icon: '😟', label: '大きく縮んだ',                       score: 5 },
       { id: 'torn',        icon: '🚨', label: '生地が裂けた',                       score: 10 },
-      { id: 'color',       icon: '😟', label: '色にじみした',                       score: 5 },
-      { id: 'unknown',     icon: '❓', label: 'わからない',                         score: 2 }
+      { id: 'color',       icon: '😟', label: '色にじみした',                       score: 5 }
     ],
     key: 'pastResult'
   },
@@ -119,8 +115,7 @@ const QUESTIONS = [
       { id: 'light',   icon: '🌸', label: '淡色',                         score: 0 },
       { id: 'mid',     icon: '🎨', label: '中間色',                       score: 1 },
       { id: 'dark',    icon: '🟥', label: '濃色（赤・濃茶・黒・紺など）', score: 5 },
-      { id: 'multi',   icon: '🌈', label: '多色・ぼかし',                 score: 2 },
-      { id: 'unknown', icon: '❓', label: 'わからない',                   score: 1 }
+      { id: 'multi',   icon: '🌈', label: '多色・ぼかし',                 score: 2 }
     ],
     key: 'color'
   }

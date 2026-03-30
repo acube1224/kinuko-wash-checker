@@ -140,8 +140,7 @@ const MATERIAL_GUESS_QUESTIONS = [
     choices: [
       { id: 'silk',  icon: '✨', label: '上品で深い光沢・角度で色が変わるぬめり感',  point: { silk: 1 } },
       { id: 'poly',  icon: '💡', label: '均一でテカっとした光沢（やや安っぽい）',    point: { poly: 1 } },
-      { id: 'mat',   icon: '🪨', label: '光沢がほぼない・マットな印象',              point: { mix: 1 }  },
-      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+      { id: 'mat',   icon: '🪨', label: '光沢がほぼない・マットな印象',              point: { mix: 1 }  }
     ],
     key: 'mg_gloss'
   },
@@ -154,8 +153,7 @@ const MATERIAL_GUESS_QUESTIONS = [
       { id: 'silk',  icon: '🌿', label: 'ひんやり・しっとりした感触',                point: { silk: 1 } },
       { id: 'poly',  icon: '🪡', label: 'ツルツル or カサカサ（人工的な感触）',      point: { poly: 1 } },
       { id: 'wool',  icon: '🧶', label: 'ふんわり暖かい・やや毛羽立ちがある',        point: { mix: 1 }  },
-      { id: 'cotton',icon: '🌾', label: 'サラッと乾いた感じ',                        point: { mix: 1 }  },
-      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+      { id: 'cotton',icon: '🌾', label: 'サラッと乾いた感じ',                        point: { mix: 1 }  }
     ],
     key: 'mg_touch'
   },
@@ -168,8 +166,7 @@ const MATERIAL_GUESS_QUESTIONS = [
       { id: 'silk',  icon: '🌀', label: '細かいシワができてすぐ戻る',                point: { silk: 1 } },
       { id: 'poly',  icon: '📄', label: 'ほぼシワにならない',                        point: { poly: 1 } },
       { id: 'cotton',icon: '📝', label: 'くっきりシワが残る',                        point: { mix: 1 }  },
-      { id: 'wool',  icon: '🔄', label: 'ゆるく戻る（完全には戻らない）',            point: { mix: 1 }  },
-      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+      { id: 'wool',  icon: '🔄', label: 'ゆるく戻る（完全には戻らない）',            point: { mix: 1 }  }
     ],
     key: 'mg_wrinkle'
   },
@@ -182,8 +179,7 @@ const MATERIAL_GUESS_QUESTIONS = [
       { id: 'silk',  icon: '🎵', label: 'キュッキュッという音（絹鳴り）',            point: { silk: 1 } },
       { id: 'poly',  icon: '📢', label: 'シャカシャカという音',                      point: { poly: 1 } },
       { id: 'cotton',icon: '🔇', label: 'ほぼ音がしない',                            point: { mix: 1 }  },
-      { id: 'wool',  icon: '🧸', label: 'モフっとした感じで音がしない',              point: { mix: 1 }  },
-      { id: 'unknown', icon: '❓', label: 'わからない',                               point: {} }
+      { id: 'wool',  icon: '🧸', label: 'モフっとした感じで音がしない',              point: { mix: 1 }  }
     ],
     key: 'mg_sound'
   }

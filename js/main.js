@@ -5,10 +5,11 @@
 const App = (() => {
   /* ── 状態管理 ── */
   const state = {
-    screen:    'top',    // 'top' | 'guide' | 'question' | 'loading' | 'result' | 'detail' | 'caution' | 'consult'
+    screen:    'top',    // 'top' | 'guide' | 'question' | 'loading' | 'result' | 'detail' | 'caution' | 'consult' | 'materialConfirm'
     qIndex:    0,
     mgIndex:   0,        // 素材推定4問のインデックス
     answers:   {},       // { key: choiceId }
+    guessedMaterialLabel: null, // 素材推定結果のラベル（確認画面用）
     result:    null      // calcJudgment() の返り値
   };
 
@@ -42,6 +43,9 @@ const App = (() => {
         break;
       case 'consult':
         html = renderConsult(state.result.grade);
+        break;
+      case 'materialConfirm':
+        html = renderMaterialConfirm(state.guessedMaterialLabel);
         break;
     }
 
@@ -215,18 +219,15 @@ const App = (() => {
         render();
         return;
       } else {
-        // 4問完了 → 素材を推定してmaterialを上書き
+        // 4問完了 → 確認画面へ遷移
         const guessed = guessMaterial();
-        if (guessed === 'silk') {
-          state.answers.material = 'silk';
-        } else if (guessed === 'poly') {
-          state.answers.material = 'other';
-        } else {
-          state.answers.material = 'mix';
-        }
-        state.mgIndex = 0;
-        // materialGuessプレースホルダーの次へ進む
-        state.qIndex++;
+        const labelMap = {
+          silk: '正絹（シルク）',
+          poly: '化繊（ポリエステルなど）',
+          mix:  '混紡・綿・麻・ウール'
+        };
+        state.guessedMaterialLabel = { key: guessed, label: labelMap[guessed] || '混紡・綿・麻・ウール' };
+        state.screen = 'materialConfirm';
         render();
         return;
       }
@@ -245,6 +246,39 @@ const App = (() => {
       }, 1600);
     } else {
       state.qIndex++;
+      render();
+    }
+  }
+
+  /* ── 素材推定確認画面のアクション ── */
+  function confirmMaterial(accepted) {
+    if (accepted) {
+      // 「はい」→ 推定結果を answers.material に反映して次へ
+      const guessed = state.guessedMaterialLabel.key;
+      if (guessed === 'silk') {
+        state.answers.material = 'silk';
+      } else if (guessed === 'poly') {
+        state.answers.material = 'other';
+      } else {
+        state.answers.material = 'mix';
+      }
+      state.mgIndex = 0;
+      state.screen = 'question';
+      // materialGuessプレースホルダーの次へ進む
+      const mainList = getMainQuestionList();
+      const mgIdx = mainList.findIndex(q => q.key === 'materialGuess');
+      if (mgIdx !== -1) {
+        state.qIndex = mgIdx + 1;
+      } else {
+        state.qIndex++;
+      }
+      render();
+    } else {
+      // 「いいえ」→ 素材推定4問の最初に戻る
+      MATERIAL_GUESS_QUESTIONS.forEach(q => delete state.answers[q.key]);
+      state.mgIndex = 0;
+      state.guessedMaterialLabel = null;
+      state.screen = 'question';
       render();
     }
   }
@@ -313,6 +347,7 @@ const App = (() => {
     prevQuestion,
     selectChoice,
     nextQuestion,
+    confirmMaterial,
     showResult,
     resultAction,
     init

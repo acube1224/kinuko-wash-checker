@@ -144,6 +144,67 @@ function renderQuestion(q, qIndex, answers, totalQ) {
 
 
 /* =============================
+   ③-b 素材推定 確認画面
+   ============================= */
+function renderMaterialConfirm(guessedLabel) {
+  const iconMap = {
+    silk: '🌿',
+    poly: '✨',
+    mix:  '🧶'
+  };
+  const icon = iconMap[guessedLabel.key] || '🤔';
+
+  const descMap = {
+    silk: '光沢・手触り・シワのつき方・音の特徴から、<strong>正絹（シルク）</strong>に近い生地と推定されました。',
+    poly: '光沢・手触り・シワのつき方・音の特徴から、<strong>化繊（ポリエステルなど）</strong>に近い生地と推定されました。',
+    mix:  '光沢・手触り・シワのつき方・音の特徴から、<strong>混紡・綿・麻・ウール</strong>に近い生地と推定されました。'
+  };
+  const desc = descMap[guessedLabel.key] || '生地の特徴から素材を推定しました。';
+
+  return `
+<div class="screen">
+  <div class="nav-bar">
+    <button class="nav-back" onclick="App.confirmMaterial(false)">←</button>
+    <span class="nav-title">素材の推定結果</span>
+    <div class="nav-right"></div>
+  </div>
+
+  <div class="content" style="text-align:center; padding-top: 32px;">
+    <div style="font-size: 3rem; margin-bottom: 16px;">${icon}</div>
+    <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--col-main); margin-bottom: 12px;">
+      この生地は…
+    </h2>
+    <div style="
+      background: rgba(74,124,111,0.07);
+      border: 1.5px solid var(--col-moegi);
+      border-radius: 14px;
+      padding: 18px 20px;
+      margin: 0 0 20px;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: var(--col-text);
+    ">
+      ${desc}
+    </div>
+    <p style="font-size: 0.82rem; color: var(--col-sub); line-height: 1.7; margin-bottom: 28px;">
+      この推定をもとに、続けて診断を進めます。<br>
+      推定が合っていない場合は「やり直す」を押してください。
+    </p>
+
+    <div class="btn-footer" style="flex-direction: column; gap: 12px; padding: 0;">
+      <button class="btn-primary" onclick="App.confirmMaterial(true)">
+        <strong>はい、この想定で進める</strong>
+      </button>
+      <button class="btn-secondary" onclick="App.confirmMaterial(false)">
+        いいえ、やり直す（4問を最初から）
+      </button>
+    </div>
+  </div>
+</div>`;
+}
+
+
+/* =============================
    ④ ローディング画面
    ============================= */
 function renderLoading() {

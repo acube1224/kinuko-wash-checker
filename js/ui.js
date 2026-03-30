@@ -16,7 +16,7 @@ function renderTop() {
     <img src="${LOGO_IMG}" alt="日々、絹子さん。" class="top-logo-img" />
     <h1 class="top-title">その長襦袢、<br>お家で洗えそうかな？</h1>
     <p class="top-subtitle">目安のセルフ判定</p>
-    <p class="top-version">Ver 1.1</p>
+    <p class="top-version">Ver 1.11</p>
 
     <div class="top-cards">
       <div class="top-card">

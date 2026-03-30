@@ -181,6 +181,8 @@ function renderResult(result) {
     if (btn.style === 'primary')   cls = 'btn-primary';
     if (btn.style === 'enji')      cls = 'btn-enji';
     if (btn.style === 'kincha')    cls = 'btn-kincha';
+    if (btn.style === 'orange')    cls = 'btn-orange';
+    if (btn.style === 'skyblue')   cls = 'btn-skyblue';
     return `<button class="${cls}" onclick="App.resultAction('${btn.action}')">${btn.label}</button>`;
   }).join('');
 
@@ -334,6 +336,13 @@ function renderCaution(grade) {
         <div class="caution-text">
           <strong>色落ちを先に確認する</strong>
           <span>まず目立たない部分を少し濡らして、白い布に押し当てて色が出ないか確認してください。</span>
+        </div>
+      </div>
+      <div class="caution-item">
+        <span class="caution-icon">🧴</span>
+        <div class="caution-text">
+          <strong>タオルドライで脱水する</strong>
+          <span>洗い終わったら、絞らずにタオルで挟み、やさしく押さえて水分を吸い取ってください。強く絞ると生地が傷み、型崩れの原因になります。</span>
         </div>
       </div>
       <div class="caution-item">

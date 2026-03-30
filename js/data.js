@@ -22,7 +22,7 @@ const QUESTIONS = [
     text: '生地の特徴に、\nいちばん近いものを選んでください',
     hint: '表面を見たり、手でやさしく触れたりして選んでください。\nちりめんのような強い凹凸は注意が必要です。絽のようなとても薄い生地も慎重に扱う必要があります。',
     choices: [
-      { id: 'smooth',   icon: '✨', label: '表面が滑らかな普通の生地',            score: -1 },
+      { id: 'smooth',   icon: '✨', label: '標準的な生地感',                       score: -1 },
       { id: 'crepe',    icon: '⚠️', label: 'ちりめんのように、細かい凹凸が強い',  score: 5 },
       { id: 'ro',       icon: '🎐', label: '絽（ろ）のように、かなり薄く透け感がある', score: 3 },
       { id: 'unknown',  icon: '❓', label: 'わからない',                           score: 2 }
@@ -40,10 +40,8 @@ const QUESTIONS = [
       { id: 'chirimen',  icon: '×',  label: '縮緬（ちりめん）',         score: 10 },
       { id: 'rinzu',     icon: '△',  label: '綸子（りんず）',           score: 4  },
       { id: 'ro',        icon: '△',  label: '絽（ろ）・紗（しゃ）',     score: 3  },
-      { id: 'palace',    icon: '◯',  label: 'パレス',                   score: 1  },
       { id: 'seika',     icon: '◯',  label: '精華（せいか）',           score: 0  },
       { id: 'habutae',   icon: '◯',  label: '羽二重（はぶたえ）',       score: 0  },
-      { id: 'komakoma',  icon: '◯',  label: '駒駒（こまこま）',         score: -1 },
       { id: 'shioze',    icon: '◯',  label: '塩瀬（しおぜ）',           score: -1 },
       { id: 'unknown',   icon: '❓',  label: 'その他・わからない',       score: 2  }
     ],

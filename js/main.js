@@ -106,14 +106,26 @@ const App = (() => {
   }
 
   // 表示する質問リストを動的に生成（正絹選択時はQ2sを使用、Q2をスキップ）
+  // Q5で水通し経験なし・わからない場合はQ6をスキップ
   function getQuestionList() {
+    let list;
     if (state.answers.material === 'silk') {
       // 正絹の場合：Q1 → Q2s（正絹専用）→ Q3以降
-      return QUESTIONS.filter(q => q.key !== 'fabric');
+      list = QUESTIONS.filter(q => q.key !== 'fabric');
     } else {
       // 正絹以外：Q1 → Q2（通常）→ Q3以降（Q2sをスキップ）
-      return QUESTIONS.filter(q => q.key !== 'silkFabric');
+      list = QUESTIONS.filter(q => q.key !== 'silkFabric');
     }
+
+    // Q5で「したことはない」または「わからない」を選択した場合はQ6をスキップ
+    const waterHistory = state.answers.waterHistory;
+    if (waterHistory === 'no' || waterHistory === 'unknown') {
+      list = list.filter(q => q.key !== 'pastResult');
+      // Q6の回答をリセット（スキップしたのでスコアに影響させない）
+      delete state.answers.pastResult;
+    }
+
+    return list;
   }
 
   function nextQuestion() {

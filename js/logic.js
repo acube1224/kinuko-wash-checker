@@ -123,23 +123,23 @@ const RESULT_CONTENT = {
     reasonTitle: 'この判定になった主な理由',
     recommend: '短時間・やさしい手洗いで、無理のないケアをご検討ください。',
     buttons: [
-      { label: '洗う前の注意点を見る', action: 'caution',  style: 'primary' },
-      { label: '判定理由を詳しく見る',  action: 'detail',   style: 'secondary' },
+      { label: '洗う前の注意点を見る', action: 'caution',  style: 'skyblue' },
+      { label: '判定理由を詳しく見る',  action: 'detail',   style: 'orange' },
       { label: '最初からやり直す',          action: 'retry',    style: 'secondary' }
     ]
   },
   B: {
-    badge:    '慎重に検討',
+    badge:    '注意して検討',
     badgeClass: 'badge-b',
     barClass:   'bar-b',
     icon:     '⚠️',
-    title:    '慎重に検討したいお品です',
-    desc:     '今回の回答内容から見ると、自宅で洗えないとは言い切れないものの、慎重な判断が必要なタイプです。生地の薄さ、仕立ての特徴、色の濃さ、過去の履歴などに、やや注意したい要素が含まれています。\n\n自宅で試す場合でも、無理をせず、できるだけ慎重に判断するのが安心です。',
-    reasonTitle: '慎重に見たいポイント',
+    title:    '注意して検討したいお品です',
+    desc:     '今回の回答内容から見ると、自宅で洗えないとは言い切れないものの、注意して判断が必要なタイプです。生地の薄さ、仕立ての特徴、色の濃さ、過去の履歴などに、やや注意したい要素が含まれています。\n\n自宅で試す場合でも、無理をせず、できるだけ注意して判断するのが安心です。',
+    reasonTitle: '注意して見たいポイント',
     recommend: 'まずは目立たない部分で確認し、不安があれば自宅洗いは見送るのがおすすめです。',
     buttons: [
-      { label: '洗う前の注意点を見る',  action: 'caution',  style: 'kincha' },
-      { label: '判定理由を詳しく見る',   action: 'detail',   style: 'secondary' },
+      { label: '洗う前の注意点を見る',  action: 'caution',  style: 'skyblue' },
+      { label: '判定理由を詳しく見る',   action: 'detail',   style: 'orange' },
       { label: '最初からやり直す',           action: 'retry',    style: 'secondary' }
     ]
   },
@@ -153,7 +153,7 @@ const RESULT_CONTENT = {
     reasonTitle: '自宅洗いを避けたい主な理由',
     recommend: '自宅洗いは行わず、専門店への相談をご検討ください。',
     buttons: [
-      { label: '判定理由を詳しく見る', action: 'detail',  style: 'enji' },
+      { label: '判定理由を詳しく見る', action: 'detail',  style: 'orange' },
       { label: '最初からやり直す',     action: 'retry',   style: 'secondary' }
     ]
   }

@@ -23,12 +23,12 @@ const QUESTIONS = [
     text: '正絹の生地種類に、\nいちばん近いものを選んでください',
     hint: '生地種類によって洗いやすさが大きく異なります。タグや購入時の情報を参考にしてください。わからない場合は「その他・わからない」を選んでください。',
     choices: [
-      { id: 'chirimen',  icon: '',   label: '縮緬',                     score: 10 },
       { id: 'rinzu',     icon: '',   label: '綸子',                     score: 2  },
-      { id: 'ro',        icon: '',   label: '絽・紗',                   score: 3  },
       { id: 'seika',     icon: '',   label: '精華パレス',               score: 0  },
-      { id: 'habutae',   icon: '',   label: '羽二重',                   score: 5  },
       { id: 'shioze',    icon: '',   label: '塩瀬の半衿・うそつき',     score: -1 },
+      { id: 'ro',        icon: '',   label: '絽・紗',                   score: 3  },
+      { id: 'habutae',   icon: '',   label: '羽二重',                   score: 5  },
+      { id: 'chirimen',  icon: '',   label: 'ちりめん',                 score: 10 },
       { id: 'unknown',   icon: '❓', label: 'その他・わからない',       score: 2  }
     ],
     key: 'silkFabric'

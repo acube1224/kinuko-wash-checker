@@ -23,13 +23,13 @@ const QUESTIONS = [
     text: '正絹の生地種類に、\nいちばん近いものを選んでください',
     hint: '生地種類によって洗いやすさが大きく異なります。タグや購入時の情報を参考にしてください。わからない場合は「その他・わからない」を選んでください。',
     choices: [
-      { id: 'chirimen',  icon: '×',  label: '縮緬（ちりめん）',         score: 10 },
-      { id: 'rinzu',     icon: '△',  label: '綸子（りんず）',           score: 4  },
-      { id: 'ro',        icon: '△',  label: '絽（ろ）・紗（しゃ）',     score: 3  },
-      { id: 'seika',     icon: '◯',  label: '精華（せいか）',           score: 0  },
-      { id: 'habutae',   icon: '◯',  label: '羽二重（はぶたえ）',       score: 0  },
-      { id: 'shioze',    icon: '◯',  label: '塩瀬（しおぜ）',           score: -1 },
-      { id: 'unknown',   icon: '❓',  label: 'その他・わからない',       score: 2  }
+      { id: 'chirimen',  icon: '',   label: '縮緬',                     score: 10 },
+      { id: 'rinzu',     icon: '',   label: '綸子',                     score: 2  },
+      { id: 'ro',        icon: '',   label: '絽・紗',                   score: 3  },
+      { id: 'seika',     icon: '',   label: '精華パレス',               score: 0  },
+      { id: 'habutae',   icon: '',   label: '羽二重',                   score: 4  },
+      { id: 'shioze',    icon: '',   label: '塩瀬の半衿・うそつき',     score: -1 },
+      { id: 'unknown',   icon: '❓', label: 'その他・わからない',       score: 2  }
     ],
     key: 'silkFabric'
   },
@@ -85,7 +85,7 @@ const QUESTIONS = [
     text: '過去に、この長襦袢へ\n水を通したことがありますか',
     hint: '水通し・丸洗い・洗い張りの経験があるものは、縮み方の傾向が少し読みやすいことがあります。ただし、それだけで安全とは限りません。',
     choices: [
-      { id: 'yes',     icon: '💧', label: '水通し・丸洗い・洗い張りをしたことがある', score: -2 },
+      { id: 'yes',     icon: '💧', label: '水通し・洗い張りをしたことがある',         score: -3 },
       { id: 'no',      icon: '🚫', label: 'したことはない',                            score: 2 },
       { id: 'unknown', icon: '❓', label: 'わからない',                                score: 1 }
     ],

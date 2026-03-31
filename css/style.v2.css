@@ -940,3 +940,36 @@ html, body {
     }
   }
 }
+
+/* ── レーダーチャート（安全度グラフ）── */
+.radar-section {
+  margin: 0 0 20px;
+  background: rgba(74,124,111,0.05);
+  border: 1px solid rgba(74,124,111,0.18);
+  border-radius: 14px;
+  padding: 16px 16px 12px;
+  text-align: center;
+}
+.radar-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--col-main);
+  letter-spacing: 0.05em;
+  margin: 0 0 2px;
+}
+.radar-sub {
+  font-size: 0.72rem;
+  color: var(--col-sub);
+  margin: 0 0 12px;
+}
+.radar-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.radar-wrap canvas {
+  max-width: 280px;
+  max-height: 280px;
+  width: 100% !important;
+  height: auto !important;
+}

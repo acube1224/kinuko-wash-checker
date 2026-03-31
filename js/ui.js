@@ -300,9 +300,123 @@ function renderResult(result) {
 /* =============================
    ⑥ 判定理由の詳細画面
    ============================= */
+
+/* ── 安全度変換テーブル ── */
+const SAFETY_SCORE = {
+  // 生地（silkFabric）
+  silkFabric: {
+    chirimen:  0,
+    rinzu:     4,
+    ro:        5,
+    seika:     8,
+    habutae:   8,
+    shioze:    8,
+    unknown:   5   // 「わからない」→fabric判定後：smooth=6, crepe=2, ro=4 で上書き
+  },
+  // 生地（fabric：正絹でsilkFabric=unknownのとき）
+  fabric: {
+    smooth:    6,
+    crepe:     2,
+    ro:        4
+  },
+  // 仕立て
+  tailoring: {
+    hitoe:     10,
+    hanmuso:   8,
+    muso:      5,
+    shikiate:  5,
+    awase:     3
+  },
+  // 装飾
+  decoration: {
+    no:   10,
+    yes:   2
+  },
+  // 水処理歴
+  waterHistory: {
+    yes:     9,
+    no:      4,
+    unknown: 4
+  },
+  // 過去の水洗い（pastResult）
+  pastResult: {
+    ok:          8,
+    smallshrink: 7,
+    color:       3,
+    shrink:      3,
+    torn:        0
+    // スキップ時（水処理なし）→ 3 で設定
+  },
+  // 地色
+  color: {
+    white:  10,
+    light:   9,
+    mid:     7,
+    multi:   5,
+    dark:    4
+  }
+};
+
+/* 安全度スコアを取得（未回答は5） */
+function getSafetyScore(key, answerId) {
+  if (!answerId) return 5;
+  return SAFETY_SCORE[key]?.[answerId] ?? 5;
+}
+
+/* レーダーチャート用データを生成（正絹のみ） */
+function buildRadarData(ans, grade) {
+  // 生地軸：silkFabricUnknown → fabric を使う
+  let fabricScore;
+  if (ans.silkFabric && ans.silkFabric !== 'unknown') {
+    fabricScore = getSafetyScore('silkFabric', ans.silkFabric);
+  } else if (ans.fabric) {
+    fabricScore = getSafetyScore('fabric', ans.fabric);
+  } else {
+    fabricScore = 5;
+  }
+
+  // 過去の水洗い：水処理歴なし/不明のときスキップ → 3
+  let pastScore;
+  if (ans.waterHistory === 'yes' && ans.pastResult) {
+    pastScore = getSafetyScore('pastResult', ans.pastResult);
+  } else {
+    pastScore = 3; // 水処理なし/不明のデフォルト
+  }
+
+  const data = [
+    fabricScore,
+    getSafetyScore('tailoring',    ans.tailoring),
+    getSafetyScore('decoration',   ans.decoration),
+    getSafetyScore('waterHistory', ans.waterHistory),
+    pastScore,
+    getSafetyScore('color',        ans.color)
+  ];
+
+  // 判定色
+  const colorMap = {
+    A: { border: '#2e7d5a', bg: 'rgba(74,158,111,0.35)' },
+    B: { border: '#c8a000', bg: 'rgba(230,192,32,0.35)' },
+    C: { border: '#a03030', bg: 'rgba(192,57,43,0.35)'  }
+  };
+  const col = colorMap[grade] || colorMap.B;
+
+  return { data, border: col.border, bg: col.bg };
+}
+
 function renderDetail(result) {
   const rc = RESULT_CONTENT[result.grade];
   const ans = result.answers;
+  const isSilk = ans.material === 'silk';
+
+  // レーダーチャートHTML（正絹のみ）
+  const radarHTML = isSilk ? `
+  <div class="radar-section">
+    <p class="radar-title">安全度レーダー</p>
+    <p class="radar-sub">各項目の安全度（10＝安全・0＝リスク高）</p>
+    <div class="radar-wrap">
+      <canvas id="safetyRadarCanvas" width="280" height="280"></canvas>
+    </div>
+  </div>` : '';
 
   // 質問ごとの回答サマリーを生成
   const summaryRows = QUESTIONS.map(q => {
@@ -346,6 +460,8 @@ function renderDetail(result) {
       🔴 危険要素 ／ 🟡 慎重要素 ／ 🟢 安心材料 ／ ⚪ 参考情報
     </p>
 
+    ${radarHTML}
+
     <div class="detail-card">
       ${summaryRows}
     </div>
@@ -355,6 +471,60 @@ function renderDetail(result) {
     <button class="btn-primary" onclick="App.showResult()">結果画面に戻る</button>
   </div>
 </div>`;
+}
+
+/* ── renderDetail後にグラフ描画 ── */
+function drawSafetyRadar(ans, grade) {
+  const canvas = document.getElementById('safetyRadarCanvas');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  // 既存グラフ破棄
+  if (window._safetyRadarChart) {
+    window._safetyRadarChart.destroy();
+    window._safetyRadarChart = null;
+  }
+
+  const { data, border, bg } = buildRadarData(ans, grade);
+  const labels = ['生地', '仕立て', '装飾', '水処理歴', '過去の水洗い', '地色'];
+
+  window._safetyRadarChart = new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: border,
+        backgroundColor: bg,
+        borderWidth: 2,
+        pointBackgroundColor: border,
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        r: {
+          min: 0,
+          max: 10,
+          ticks: {
+            stepSize: 2,
+            font: { size: 9 },
+            color: '#999',
+            backdropColor: 'transparent'
+          },
+          pointLabels: {
+            font: { size: 11, family: "'Noto Sans JP', sans-serif" },
+            color: '#4a4a3c'
+          },
+          grid: { color: 'rgba(0,0,0,0.1)' },
+          angleLines: { color: 'rgba(0,0,0,0.12)' }
+        }
+      }
+    }
+  });
 }
 
 

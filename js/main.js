@@ -39,6 +39,10 @@ const App = (() => {
       case 'materialConfirm': html = renderMaterialConfirm(state.guessedMaterialLabel);  break;
     }
     $app.innerHTML = html;
+    // 詳細画面：正絹のときレーダーチャートを描画
+    if (state.screen === 'detail' && state.result?.answers?.material === 'silk') {
+      setTimeout(() => drawSafetyRadar(state.result.answers, state.result.grade), 50);
+    }
     if (window.parent && window.parent !== window) {
       window.parent.postMessage({ type: 'kinuko-scroll-top' }, '*');
     } else {

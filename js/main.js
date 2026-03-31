@@ -318,9 +318,21 @@ const App = (() => {
       return;
     }
 
+    // Q2（fabric）：silkFabricUnknown=true（正絹「わからない」→Q2経由）→ Q3（仕立て）へ明示的に進む
+    if (currentQ.key === 'fabric' && state.silkFabricUnknown) {
+      const fullList = getSilkWithFabricQuestionList();
+      const tailoringIdx = fullList.findIndex(q => q.key === 'tailoring');
+      if (tailoringIdx !== -1) {
+        state.qIndex = tailoringIdx;
+        render();
+        return;
+      }
+    }
+
     // 通常進行
     const list = getQuestionList();
     if (state.qIndex + 1 >= list.length) {
+
       state.screen = 'loading';
       render();
       setTimeout(() => {

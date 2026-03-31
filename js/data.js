@@ -9,7 +9,7 @@ const QUESTIONS = [
     text: 'この長襦袢の素材に、\nいちばん近いものを選んでください',
     hint: '購入時の説明、タグ、反物の情報があれば参考にしてください。\nはっきりしない場合は「わからない」で大丈夫です。',
     choices: [
-      { id: 'silk',    icon: '🌿', label: '正絹',           score: 0 },
+      { id: 'silk',    icon: '🌿', label: '正絹',           score: 2 },
       { id: 'mix',     icon: '🌾', label: '混紡・綿・麻・ウール', score: 0 },
       { id: 'other',   icon: '🪡', label: '化繊（ポリ・シルック）', score: -2 },
       { id: 'unknown', icon: '❓', label: 'わからない',      score: 2 }

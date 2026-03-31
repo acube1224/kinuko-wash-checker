@@ -306,10 +306,10 @@ const SAFETY_SCORE = {
   // 生地（silkFabric）
   silkFabric: {
     chirimen:  0,
-    rinzu:     4,
+    rinzu:     7,
     ro:        5,
     seika:     8,
-    habutae:   8,
+    habutae:   6,
     shioze:    8,
     unknown:   5   // 「わからない」→fabric判定後：smooth=6, crepe=2, ro=4 で上書き
   },

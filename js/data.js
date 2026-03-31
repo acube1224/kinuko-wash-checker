@@ -27,7 +27,7 @@ const QUESTIONS = [
       { id: 'rinzu',     icon: '',   label: '綸子',                     score: 2  },
       { id: 'ro',        icon: '',   label: '絽・紗',                   score: 3  },
       { id: 'seika',     icon: '',   label: '精華パレス',               score: 0  },
-      { id: 'habutae',   icon: '',   label: '羽二重',                   score: 4  },
+      { id: 'habutae',   icon: '',   label: '羽二重',                   score: 5  },
       { id: 'shioze',    icon: '',   label: '塩瀬の半衿・うそつき',     score: -1 },
       { id: 'unknown',   icon: '❓', label: 'その他・わからない',       score: 2  }
     ],

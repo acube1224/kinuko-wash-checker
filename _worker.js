@@ -221,7 +221,7 @@ async function handleAdminStats(request, env) {
       `SELECT grade, COUNT(*) as cnt FROM diagnosis_logs WHERE is_test=0 GROUP BY grade`
     ).all(),
     env.kinuko_logs.prepare(
-      `SELECT date(created_at) as day, COUNT(*) as cnt FROM diagnosis_logs WHERE is_test=0 GROUP BY day ORDER BY day DESC LIMIT 30`
+      `SELECT date(created_at, '+9 hours') as day, COUNT(*) as cnt FROM diagnosis_logs WHERE is_test=0 GROUP BY day ORDER BY day DESC LIMIT 30`
     ).all(),
     env.kinuko_logs.prepare(
       `SELECT ans_material, COUNT(*) as cnt FROM diagnosis_logs WHERE is_test=0 GROUP BY ans_material`
@@ -662,7 +662,7 @@ async function loadLogs(page) {
     <tr class="\${r.is_test ? 'test-row' : ''}">
       <td><input type="checkbox" class="row-check" value="\${r.id}"></td>
       <td>\${r.id}</td>
-      <td>\${r.created_at.slice(0,16).replace('T',' ')}</td>
+      <td>\${new Date(\`\${r.created_at.endsWith('Z') ? r.created_at : r.created_at + 'Z'}\`).toLocaleString('ja-JP', {timeZone:'Asia/Tokyo', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'})}</td>
       <td><span class="badge badge-\${r.grade}">\${r.grade}</span>\${r.is_test ? ' <span class="badge badge-test">TEST</span>' : ''}</td>
       <td>\${r.score}</td>
       <td>\${lbl('material', r.ans_material)}</td>

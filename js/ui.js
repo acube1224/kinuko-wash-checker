@@ -367,7 +367,7 @@ const SAFETY_SCORE = {
     no:      4,
     unknown: 4
   },
-  // 過去の水洗い（pastResult）
+  // 過去の変化歴（pastResult）
   pastResult: {
     ok:          10,
     smallshrink: 7,
@@ -414,7 +414,7 @@ function buildRadarData(ans, grade) {
     fabricScore = Math.max(0, fabricScore - 3);
   }
 
-  // 過去の水洗い：水処理歴なし/不明のときスキップ → 3
+  // 過去の変化歴：水処理歴なし/不明のときスキップ → 3
   let pastScore;
   if (ans.waterHistory === 'yes' && ans.pastResult) {
     pastScore = getSafetyScore('pastResult', ans.pastResult);

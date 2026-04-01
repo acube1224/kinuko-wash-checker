@@ -153,7 +153,7 @@ async function handleFabricCheck(request, env) {
 リストのいずれにも明確に該当しないが、最も近い候補があると判断した場合は：
   fabricKey に "closest_match" を返し、
   closestFabricKey にそのキーを、
-  closestReason にその理由を30〜50字程度で日本語で記入してください。
+  closestReason にその理由を400字前後で日本語で記入してください。
 
 全く判断できない場合のみ fabricKey に "unknown" を返してください。
 
@@ -162,7 +162,7 @@ async function handleFabricCheck(request, env) {
   "materialKey": "素材カテゴリのキー",
   "fabricKey": "生地種類のキー または closest_match または unknown",
   "confidence": "high または mid または low",
-  "comment": "判定根拠を30〜50字程度で日本語で説明",
+  "comment": "判定根拠を400字前後で日本語で説明。生地の特徴（光沢・シボ・織り目・透け感など）を具体的に述べ、判定の根拠と注意点も含めること",
   "closestFabricKey": "closest_match時のみ記入。それ以外はnull",
   "closestReason": "closest_match時のみ記入。それ以外はnull"
 }`;

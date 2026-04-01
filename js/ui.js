@@ -44,7 +44,7 @@ function renderTop() {
 
     <button class="btn-primary" onclick="App.goGuide()">診断をはじめる</button>
     <p class="top-notice">
-      ※この判定は目安です。大切なお品や不安のあるお品は、<br>専門店へのご相談をおすすめします。
+      ※この判定は回答内容に基づく目安です。実際のお品のより細かな個体差、保管状態により結果は変わる場合があります。あくまでも目安であり判定を保証するものではありません。
     </p>
   </div>
 </div>`;

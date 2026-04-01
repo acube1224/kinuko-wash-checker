@@ -62,7 +62,7 @@ const FabricApp = (() => {
   <div style="padding: 32px 16px 20px; text-align:center;">
     <img src="../images/logo.png" alt="絹子さん" style="width:80px; height:80px; object-fit:contain; margin-bottom:12px;">
     <p class="fabric-top-title">その長襦袢、何の生地かな？<br>絹子さんのAI生地チェッカー</p>
-    <p class="fabric-top-sub">prototype ver.</p>
+    <p class="fabric-top-sub">Ver 1.50</p>
   </div>
 
   <p style="font-size:0.9rem; color:#6e6058; text-align:center; padding:0 24px 20px; line-height:1.7;">

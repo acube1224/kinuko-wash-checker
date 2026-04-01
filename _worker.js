@@ -736,7 +736,7 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
 
 <header>
   <h1>🌿 長襦袢セルフ判定 管理画面</h1>
-  <span>Ver 1.41</span>
+  <span>Ver 1.50</span>
 </header>
 
 <div class="tabs">

@@ -141,7 +141,7 @@ async function handleFabricCheck(request, env) {
 - other（その他・不明）
 
 【判定ルール2：生地の種類】
-必ず以下の中から1つ選んでください：
+以下のリストを参照し、明確に該当するものがあれば fabricKey にそのキーを返してください。
 - chirimen（ちりめん：細かいシボがある・光沢が少ない）
 - rinzu（綸子：光沢があり地紋が見える）
 - habutae（羽二重：なめらかで光沢がある薄手）
@@ -149,14 +149,22 @@ async function handleFabricCheck(request, env) {
 - seika（精華パレス：光沢があり薄手）
 - shioze（塩瀬：横畝があり厚手）
 - smooth（一般的な平織り・特徴が少ない）
-- unknown（判定できない）
+
+リストのいずれにも明確に該当しないが、最も近い候補があると判断した場合は：
+  fabricKey に "closest_match" を返し、
+  closestFabricKey にそのキーを、
+  closestReason にその理由を30〜50字程度で日本語で記入してください。
+
+全く判断できない場合のみ fabricKey に "unknown" を返してください。
 
 【出力形式】必ずJSON形式のみで返してください。余計な文章は不要です。
 {
   "materialKey": "素材カテゴリのキー",
-  "fabricKey": "生地種類のキー",
+  "fabricKey": "生地種類のキー または closest_match または unknown",
   "confidence": "high または mid または low",
-  "comment": "判定根拠を30〜50字程度で日本語で説明"
+  "comment": "判定根拠を30〜50字程度で日本語で説明",
+  "closestFabricKey": "closest_match時のみ記入。それ以外はnull",
+  "closestReason": "closest_match時のみ記入。それ以外はnull"
 }`;
 
     const geminiRes = await fetch(
@@ -197,10 +205,25 @@ async function handleFabricCheck(request, env) {
     }
 
     // 想定外のキーを補正
-    const VALID_FABRIC  = ['chirimen','rinzu','habutae','ro','seika','shioze','smooth','unknown'];
+    const VALID_FABRIC   = ['chirimen','rinzu','habutae','ro','seika','shioze','smooth','unknown','closest_match'];
     const VALID_MATERIAL = ['silk','cotton','linen','poly','other'];
-    if (!VALID_FABRIC.includes(parsed.fabricKey))    parsed.fabricKey   = 'unknown';
+    if (!VALID_FABRIC.includes(parsed.fabricKey))     parsed.fabricKey   = 'unknown';
     if (!VALID_MATERIAL.includes(parsed.materialKey)) parsed.materialKey = 'other';
+
+    // closest_match のとき closestFabricKey が有効か確認
+    const VALID_CLOSEST = ['chirimen','rinzu','habutae','ro','seika','shioze','smooth'];
+    if (parsed.fabricKey === 'closest_match') {
+      if (!VALID_CLOSEST.includes(parsed.closestFabricKey)) {
+        // 候補キーが不正なら unknown に格下げ
+        parsed.fabricKey = 'unknown';
+        parsed.closestFabricKey = null;
+        parsed.closestReason    = null;
+      }
+    } else {
+      // closest_match 以外では不要フィールドをクリア
+      parsed.closestFabricKey = null;
+      parsed.closestReason    = null;
+    }
 
     return Response.json(parsed);
 

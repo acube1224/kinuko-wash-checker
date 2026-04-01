@@ -414,3 +414,54 @@
   color: #8b3a3a;
   line-height: 1.6;
 }
+
+/* ── 最も近い候補カード（closest_match） ── */
+.fabric-closest-card {
+  background: linear-gradient(135deg, #f3f7fa, #e8f0f5);
+  border: 1px solid #b8d0e0;
+  border-radius: 16px;
+  padding: 20px 20px;
+  margin: 0 16px 20px;
+  text-align: center;
+}
+
+.fabric-closest-label {
+  font-size: 0.78rem;
+  color: #3d5a6e;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.fabric-closest-name {
+  font-family: var(--font-serif);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #2a4a5e;
+  margin-bottom: 6px;
+}
+
+.fabric-closest-desc {
+  font-size: 0.82rem;
+  color: #5a7a8e;
+  margin-bottom: 8px;
+}
+
+.fabric-closest-reason {
+  font-size: 0.85rem;
+  color: #4a6a7e;
+  background: #fff;
+  border: 1px solid #b8d0e0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  line-height: 1.6;
+  text-align: left;
+}
+
+/* 該当なし時のメイン名を小さめに */
+.fabric-result-name.no-match {
+  font-size: 1.05rem;
+  color: #888;
+  font-weight: 500;
+  margin-bottom: 10px;
+}

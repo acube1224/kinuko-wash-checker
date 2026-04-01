@@ -214,7 +214,10 @@ const FabricApp = (() => {
   // 結果画面
   function renderResult() {
     const r = state.result;
-    const fabricName = FABRIC_NAMES[r.fabricKey] || r.fabricKey;
+    const isClosest = r.fabricKey === 'closest_match';
+    const fabricName = isClosest
+      ? 'リストの生地には該当しませんでした'
+      : (FABRIC_NAMES[r.fabricKey] || r.fabricKey);
     const matInfo = MATERIAL_LABELS[r.materialKey] || MATERIAL_LABELS.other;
     const confLabel = r.confidence === 'high' ? '確信度：高'
                     : r.confidence === 'mid'  ? '確信度：中'
@@ -229,6 +232,15 @@ const FabricApp = (() => {
       border-radius:20px; font-size:0.82rem; font-weight:700;
       margin-bottom:8px;">${matInfo.label}</span>`;
 
+    // closest_match の場合の候補カード
+    const closestCard = isClosest && r.closestFabricKey ? `
+    <div class="fabric-closest-card">
+      <p class="fabric-closest-label">🔍 最も近い生地</p>
+      <p class="fabric-closest-name">${FABRIC_NAMES[r.closestFabricKey] || r.closestFabricKey}</p>
+      <p class="fabric-closest-desc">候補の中で最も近いのはこれです。</p>
+      <p class="fabric-closest-reason">💬 ${r.closestReason}</p>
+    </div>` : '';
+
     return `
 <div class="fabric-screen">
   <div class="fabric-nav">
@@ -241,7 +253,7 @@ const FabricApp = (() => {
     <div class="fabric-result-card">
       <p class="fabric-result-label">AI判定結果</p>
       ${materialBadge}
-      <p class="fabric-result-name">${fabricName}</p>
+      <p class="fabric-result-name${isClosest ? ' no-match' : ''}">${fabricName}</p>
       <div class="fabric-confidence">
         <span class="fabric-confidence-dot ${confDot}"></span>
         ${confLabel}
@@ -250,6 +262,8 @@ const FabricApp = (() => {
         💬 ${r.comment}
       </div>
     </div>
+
+    ${closestCard}
 
     <p class="fabric-result-notice">
       ※AIによる参考判定です。判定を保証するものではありません。

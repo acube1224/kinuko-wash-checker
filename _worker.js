@@ -1,12 +1,13 @@
 /* ============================================================
    長襦袢セルフ判定 - Cloudflare Pages Worker
-   - POST /api/log        : 診断ログ保存
-   - GET  /hibikinu       : 管理画面（ログイン）
-   - POST /hibikinu/login : 認証
-   - GET  /hibikinu/data  : ログ一覧JSON（認証済み）
-   - GET  /hibikinu/stats : 統計JSON（認証済み）
-   - POST /hibikinu/delete: ログ削除（認証済み）
-   - POST /hibikinu/flag  : テストフラグ切り替え（認証済み）
+   - POST /api/log           : 診断ログ保存
+   - POST /api/fabric-check  : 生地チェッカー AI判定
+   - GET  /hibikinu          : 管理画面（ログイン）
+   - POST /hibikinu/login    : 認証
+   - GET  /hibikinu/data     : ログ一覧JSON（認証済み）
+   - GET  /hibikinu/stats    : 統計JSON（認証済み）
+   - POST /hibikinu/delete   : ログ削除（認証済み）
+   - POST /hibikinu/flag     : テストフラグ切り替え（認証済み）
    ============================================================ */
 
 const ADMIN_PASSWORD = 'Hibikinukosan_checker';
@@ -20,6 +21,11 @@ export default {
     // ── API: ログ保存 ──────────────────────────────
     if (path === '/api/log' && request.method === 'POST') {
       return handleSaveLog(request, env);
+    }
+
+    // ── API: 生地チェッカー AI判定 ─────────────────
+    if (path === '/api/fabric-check' && request.method === 'POST') {
+      return handleFabricCheck(request, env);
     }
 
     // ── 管理画面ルート ──────────────────────────────
@@ -98,6 +104,98 @@ function checkAuth(request) {
   if (!match) return false;
   // シンプルなトークン検証（本番はKVで管理するとより安全）
   return match[1].length === 48;
+}
+
+/* ============================================================
+   API: 生地チェッカー Gemini判定
+   ============================================================ */
+async function handleFabricCheck(request, env) {
+  try {
+    const { images } = await request.json();
+    if (!images || images.length !== 3) {
+      return Response.json({ error: '画像が3枚必要です' }, { status: 400 });
+    }
+
+    const apiKey = env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return Response.json({ error: 'APIキーが設定されていません' }, { status: 500 });
+    }
+
+    // base64からdata:image/jpeg;base64, を除去
+    const parts = images.map((img, i) => {
+      const base64 = img.replace(/^data:image\/\w+;base64,/, '');
+      return {
+        inlineData: { mimeType: 'image/jpeg', data: base64 }
+      };
+    });
+
+    const prompt = `あなたは和服の生地の専門家です。
+添付された長襦袢の写真3枚（全体像・光沢角度・生地アップ）を見て、生地の種類を判定してください。
+
+【判定ルール】
+必ず以下の選択肢の中から1つだけ選んでください：
+- chirimen（ちりめん：細かいシボがある・光沢が少ない）
+- rinzu（綸子：光沢があり地紋が見える）
+- habutae（羽二重：なめらかで光沢がある薄手）
+- ro（絽・紗：透け感がある夏物）
+- seika（精華パレス：光沢があり薄手）
+- shioze（塩瀬：横畝があり厚手）
+- unknown（判定できない）
+
+【出力形式】必ずJSON形式のみで返してください。余計な文章は不要です。
+{
+  "fabricKey": "選択したキー",
+  "confidence": "high または mid または low",
+  "comment": "判定根拠を30〜50字程度で日本語で説明"
+}`;
+
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              ...parts,
+              { text: prompt }
+            ]
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          }
+        })
+      }
+    );
+
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
+      console.error('Gemini API error:', errText);
+      return Response.json({ error: 'AI判定に失敗しました。しばらくしてから再度お試しください。' }, { status: 502 });
+    }
+
+    const geminiData = await geminiRes.json();
+    const text = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    let parsed;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      // JSONパース失敗時はunknownとして返す
+      parsed = { fabricKey: 'unknown', confidence: 'low', comment: '写真からの判定が難しい状態でした。別の角度で撮り直してみてください。' };
+    }
+
+    // 想定外のfabricKeyをunknownに補正
+    const VALID_KEYS = ['chirimen','rinzu','habutae','ro','seika','shioze','unknown'];
+    if (!VALID_KEYS.includes(parsed.fabricKey)) parsed.fabricKey = 'unknown';
+
+    return Response.json(parsed);
+
+  } catch (e) {
+    console.error('handleFabricCheck error:', e);
+    return Response.json({ error: '予期しないエラーが発生しました' }, { status: 500 });
+  }
 }
 
 /* ============================================================

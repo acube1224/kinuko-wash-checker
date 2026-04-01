@@ -1,0 +1,416 @@
+/* ===========================
+   生地チェッカー 追加スタイル
+   =========================== */
+
+.fabric-screen {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 0 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── トップ画面 ── */
+.fabric-top-logo {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #a0764b, #5c3d1e);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 16px rgba(92,61,30,0.25);
+}
+
+.fabric-top-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--col-text);
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.fabric-top-sub {
+  font-size: 0.82rem;
+  color: #888;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.fabric-point-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 0 16px;
+}
+
+.fabric-point-card {
+  background: #faf7f3;
+  border: 1px solid #e8ddd4;
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.fabric-point-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.fabric-point-body strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--col-text);
+  margin-bottom: 2px;
+}
+
+.fabric-point-body span {
+  font-size: 0.8rem;
+  color: var(--col-sub);
+}
+
+.fabric-top-notice {
+  font-size: 0.75rem;
+  color: #999;
+  text-align: center;
+  line-height: 1.7;
+  padding: 0 16px;
+  margin-bottom: 24px;
+}
+
+/* ── 撮影ガイド画面 ── */
+.guide-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+  margin-bottom: 28px;
+}
+
+.guide-card {
+  background: #faf7f3;
+  border: 1px solid #e8ddd4;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.guide-card-num {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #a0764b, #5c3d1e);
+  border-radius: 50%;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.guide-card-body strong {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--col-text);
+  margin-bottom: 3px;
+}
+
+.guide-card-body span {
+  font-size: 0.8rem;
+  color: var(--col-sub);
+}
+
+/* ── アップロード画面 ── */
+.upload-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 16px;
+  margin-bottom: 28px;
+}
+
+.upload-slot {
+  border: 2px dashed #d8cfc6;
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  background: #fefefe;
+  position: relative;
+}
+
+.upload-slot.has-image {
+  border-color: #a0764b;
+  border-style: solid;
+  background: #faf7f3;
+}
+
+.upload-slot-num {
+  width: 36px;
+  height: 36px;
+  background: #f0e8e0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #a0764b;
+  flex-shrink: 0;
+}
+
+.upload-slot.has-image .upload-slot-num {
+  background: #a0764b;
+  color: #fff;
+}
+
+.upload-slot-info strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--col-text);
+}
+
+.upload-slot-info span {
+  font-size: 0.78rem;
+  color: var(--col-sub);
+}
+
+.upload-slot-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.upload-slot-add {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: #a0764b;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.upload-slot input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+/* ── ローディング ── */
+.fabric-loading {
+  text-align: center;
+  padding: 60px 24px;
+}
+
+.fabric-loading-spinner {
+  width: 56px;
+  height: 56px;
+  border: 4px solid #e8ddd4;
+  border-top-color: #a0764b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.fabric-loading-text {
+  font-size: 1rem;
+  color: var(--col-sub);
+  font-weight: 500;
+}
+
+/* ── 結果画面 ── */
+.fabric-result-card {
+  background: linear-gradient(135deg, #faf7f3, #f5ede0);
+  border: 1px solid #e8ddd4;
+  border-radius: 20px;
+  padding: 24px 20px;
+  margin: 0 16px 20px;
+  text-align: center;
+}
+
+.fabric-result-label {
+  font-size: 0.78rem;
+  color: #a0764b;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.fabric-result-name {
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  font-weight: 700;
+  color: #5c3d1e;
+  margin-bottom: 10px;
+}
+
+.fabric-confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #e8ddd4;
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.82rem;
+  color: var(--col-sub);
+  margin-bottom: 16px;
+}
+
+.fabric-confidence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.fabric-confidence-dot.high { background: #4a7c6f; }
+.fabric-confidence-dot.mid  { background: #c8a000; }
+.fabric-confidence-dot.low  { background: #a03030; }
+
+.fabric-comment {
+  font-size: 0.88rem;
+  color: var(--col-sub);
+  line-height: 1.7;
+  text-align: left;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.fabric-result-notice {
+  font-size: 0.75rem;
+  color: #aaa;
+  text-align: center;
+  padding: 0 16px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.fabric-btn-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+/* ── 共通ボタン ── */
+.btn-fabric-primary {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #a0764b, #7a5530);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  letter-spacing: 0.04em;
+}
+
+.btn-fabric-secondary {
+  width: 100%;
+  padding: 14px;
+  background: #fff;
+  color: #a0764b;
+  border: 2px solid #a0764b;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-sans);
+}
+
+.btn-fabric-link {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: #aaa;
+  border: none;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  text-decoration: underline;
+}
+
+/* ── ページ見出し ── */
+.fabric-page-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--col-text);
+  text-align: center;
+  padding: 20px 16px 8px;
+}
+
+.fabric-page-sub {
+  font-size: 0.82rem;
+  color: var(--col-sub);
+  text-align: center;
+  padding: 0 16px 20px;
+  line-height: 1.6;
+}
+
+/* ── ナビバー ── */
+.fabric-nav {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #f0e8e0;
+  margin-bottom: 4px;
+}
+
+.fabric-nav-back {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--col-sub);
+  padding: 4px 8px 4px 0;
+}
+
+.fabric-nav-title {
+  flex: 1;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--col-text);
+}
+
+/* ── エラー ── */
+.fabric-error {
+  background: #fdf0f0;
+  border: 1px solid #f0c0c0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin: 0 16px 20px;
+  font-size: 0.85rem;
+  color: #8b3a3a;
+  line-height: 1.6;
+}

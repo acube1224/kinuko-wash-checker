@@ -449,7 +449,7 @@ async function handleAdminLogin(request) {
     status: 302,
     headers: {
       'Location': '/hibikinu/dashboard',
-      'Set-Cookie': `hibikinu_token=${token}; Path=/hibikinu; HttpOnly; SameSite=Strict; Max-Age=86400`
+      'Set-Cookie': `hibikinu_token=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400`
     }
   });
 }
@@ -1108,7 +1108,11 @@ async function loadFabricLogs(page) {
   fabricCurrentPage = page;
   const offset = (page - 1) * FABRIC_PER_PAGE;
   const res = await fetch(\`/hibikinu/fabric-data?test=\${fabricTestFilter}&limit=\${FABRIC_PER_PAGE}&offset=\${offset}\`, { credentials: 'same-origin' });
-  if (!res.ok) { location.href = '/hibikinu'; return; }
+  if (!res.ok) {
+    console.error('fabric-data error:', res.status, await res.text().catch(()=>''));
+    if (res.status === 401) location.href = '/hibikinu';
+    return;
+  }
   const d = await res.json();
   const tbody = document.getElementById('fabric-log-tbody');
   if (!d.rows.length) {
@@ -1172,7 +1176,11 @@ async function deleteFabricLog(id) {
 let fabricCharts = {};
 async function loadFabricStats() {
   const res = await fetch('/hibikinu/fabric-stats', { credentials: 'same-origin' });
-  if (!res.ok) { location.href = '/hibikinu'; return; }
+  if (!res.ok) {
+    console.error('fabric-stats error:', res.status, await res.text().catch(()=>''));
+    if (res.status === 401) location.href = '/hibikinu';
+    return;
+  }
   const d = await res.json();
 
   document.getElementById('fabric-stat-cards').innerHTML = \`

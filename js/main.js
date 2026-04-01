@@ -447,7 +447,9 @@ const App = (() => {
         ans_decoration:   result.answers.decoration    || null,
         ans_water_history:result.answers.waterHistory  || null,
         ans_past_result:  result.answers.pastResult    || null,
-        ans_color:        result.answers.color         || null
+        ans_color:        result.answers.color         || null,
+        ans_option_guard:   result.answers.optionGuard   ? 1 : 0,
+        ans_option_vintage: result.answers.optionVintage ? 1 : 0
       };
       fetch('/api/log', {
         method: 'POST',

@@ -541,6 +541,8 @@ async function loadStats() {
   const gc = { A: 0, B: 0, C: 0 };
   d.gradeCount.forEach(r => gc[r.grade] = r.cnt);
   const total = d.total || 1;
+  const guardPct   = d.total > 0 ? Math.round((d.guardCnt   || 0) / d.total * 100) : 0;
+  const vintagePct = d.total > 0 ? Math.round((d.vintageCnt || 0) / d.total * 100) : 0;
 
   document.getElementById('stat-cards').innerHTML = \`
     <div class="stat-card"><div class="num">\${d.total}</div><div class="lbl">総診断数</div></div>
@@ -548,6 +550,8 @@ async function loadStats() {
     <div class="stat-card"><div class="num B">\${gc.B}</div><div class="lbl">B判定（慎重検討）</div></div>
     <div class="stat-card"><div class="num C">\${gc.C}</div><div class="lbl">C判定（非推奨）</div></div>
     <div class="stat-card"><div class="num">\${d.avgScore}</div><div class="lbl">平均スコア</div></div>
+    <div class="stat-card"><div class="num">\${guardPct}%</div><div class="lbl">🛡️ ガード加工あり<br><span style="font-size:0.75rem;color:#888;">\${d.guardCnt || 0}件</span></div></div>
+    <div class="stat-card"><div class="num">\${vintagePct}%</div><div class="lbl">🏺 ビンテージあり<br><span style="font-size:0.75rem;color:#888;">\${d.vintageCnt || 0}件</span></div></div>
   \`;
 
   // 判定割合

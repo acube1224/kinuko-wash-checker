@@ -1107,7 +1107,7 @@ function setFabricTestFilter(v) {
 async function loadFabricLogs(page) {
   fabricCurrentPage = page;
   const offset = (page - 1) * FABRIC_PER_PAGE;
-  const res = await fetch(\`/hibikinu/fabric-data?test=\${fabricTestFilter}&limit=\${FABRIC_PER_PAGE}&offset=\${offset}\`);
+  const res = await fetch(`/hibikinu/fabric-data?test=\${fabricTestFilter}&limit=\${FABRIC_PER_PAGE}&offset=\${offset}`, { credentials: 'same-origin' });
   if (!res.ok) { location.href = '/hibikinu'; return; }
   const d = await res.json();
   const tbody = document.getElementById('fabric-log-tbody');
@@ -1152,6 +1152,7 @@ async function loadFabricLogs(page) {
 async function toggleFabricTest(id, current) {
   await fetch('/hibikinu/fabric-flag', {
     method:'POST', headers:{'Content-Type':'application/json'},
+    credentials: 'same-origin',
     body: JSON.stringify({ id, is_test: current ? 0 : 1 })
   });
   loadFabricLogs(fabricCurrentPage);
@@ -1161,6 +1162,7 @@ async function deleteFabricLog(id) {
   if (!confirm('このログを削除しますか？')) return;
   await fetch('/hibikinu/fabric-delete', {
     method:'POST', headers:{'Content-Type':'application/json'},
+    credentials: 'same-origin',
     body: JSON.stringify({ id })
   });
   loadFabricLogs(fabricCurrentPage);
@@ -1169,7 +1171,7 @@ async function deleteFabricLog(id) {
 // ── 生地統計 ─────────────────────────────────────
 let fabricCharts = {};
 async function loadFabricStats() {
-  const res = await fetch('/hibikinu/fabric-stats');
+  const res = await fetch('/hibikinu/fabric-stats', { credentials: 'same-origin' });
   if (!res.ok) { location.href = '/hibikinu'; return; }
   const d = await res.json();
 

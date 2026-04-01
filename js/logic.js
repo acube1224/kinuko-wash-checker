@@ -39,9 +39,9 @@ function calcJudgment(answers) {
     chips.push({ ...REASON_CHIPS['option_guard'], key: 'option_guard' });
   }
 
-  // ビンテージ → スコア +3
+  // ビンテージ → スコア +5
   if (answers.optionVintage) {
-    score += 3;
+    score += 5;
     chips.push({ ...REASON_CHIPS['option_vintage'], key: 'option_vintage' });
   }
 

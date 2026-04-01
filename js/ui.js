@@ -267,7 +267,7 @@ function renderResult(result) {
     <span class="result-badge ${rc.badgeClass}">${rc.badge}</span>
     <div class="result-icon">${rc.icon}</div>
     <h2 class="result-title">${rc.title}</h2>
-    <p class="result-desc">${rc.desc.replace(/\n/g, '<br><br>')}${(ans.material === 'silk') ? '<br><br>ただし、正絹はとても繊細です。強くこすらない・長く浸けない・やさしく短時間で扱うことが大切です。' : ''}</p>
+    <p class="result-desc">${rc.desc.replace(/\n/g, '<br><br>')}${(ans.material === 'silk') ? '<br><br>ただし、正絹はとても繊細です。強くこすらない・長く浸けない・やさしく短時間で扱うことが大切です。また、縮みは乾燥時に大きく変化が起こるため縮みが気になる場合は半乾きの状態の時に当て布をして低温アイロンで伸ばすことで最小限に抑えられることが期待できます。' : ''}</p>
   </div>
 
   <div class="reason-section">
@@ -290,8 +290,7 @@ function renderResult(result) {
   </div>
 
   <p class="common-notice">
-    ※この判定は回答内容に基づく目安です。実際のお品の状態や個体差によって結果は変わることがあります。<br>
-    大切なお品は専門店へご相談ください。
+    ※この判定は回答内容に基づく目安です。実際のお品のより細かな個体差、保管状態により結果は変わる場合があります。あくまでも目安であり判定を保証するものではありません。
   </p>
 </div>`;
 }

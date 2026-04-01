@@ -340,10 +340,10 @@ const SAFETY_SCORE = {
   },
   // 過去の水洗い（pastResult）
   pastResult: {
-    ok:          8,
+    ok:          10,
     smallshrink: 7,
     color:       3,
-    shrink:      3,
+    shrink:      2,
     torn:        0
     // スキップ時（水処理なし）→ 3 で設定
   },
@@ -485,7 +485,7 @@ function drawSafetyRadar(ans, grade) {
   }
 
   const { data, border, bg } = buildRadarData(ans, grade);
-  const labels = ['生地', '仕立て', '装飾', '水処理歴', '過去の水洗い', '地色'];
+  const labels = ['生地', '仕立て', '装飾', '水通し歴', '過去の変化歴', '地色'];
 
   window._safetyRadarChart = new Chart(canvas, {
     type: 'radar',

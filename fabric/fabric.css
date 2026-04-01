@@ -465,3 +465,43 @@
   font-weight: 500;
   margin-bottom: 10px;
 }
+
+/* ── ニックネーム入力欄 ── */
+.fabric-nickname-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: #faf7f3;
+  border: 1px solid #e8ddd4;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.fabric-nickname-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #a0764b;
+  letter-spacing: 0.05em;
+}
+
+.fabric-nickname-input {
+  border: 1px solid #ddd0c8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  color: var(--col-text);
+  background: #fff;
+  outline: none;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s;
+}
+
+.fabric-nickname-input:focus {
+  border-color: #a0764b;
+}
+
+.fabric-nickname-hint {
+  font-size: 0.72rem;
+  color: #bbb;
+}

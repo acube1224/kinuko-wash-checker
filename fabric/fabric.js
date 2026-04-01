@@ -10,6 +10,7 @@ const FabricApp = (() => {
     screen: 'top',   // top | guide | upload | loading | result | error
     images: [null, null, null],  // base64 x3
     result: null,
+    nickname: localStorage.getItem('fabric_nickname') || '',
   };
 
   // 撮影スロット定義
@@ -95,6 +96,15 @@ const FabricApp = (() => {
   </div>
 
   <div style="padding: 0 16px 20px;">
+    <div class="fabric-nickname-wrap">
+      <label class="fabric-nickname-label">ニックネーム（任意）</label>
+      <input type="text" id="fabric-nickname" class="fabric-nickname-input"
+        placeholder="例：きぬこ"
+        maxlength="20"
+        value="${state.nickname}"
+        oninput="FabricApp.onNicknameInput(this.value)">
+      <span class="fabric-nickname-hint">判定ログに記録されます。省略可。</span>
+    </div>
     <button class="btn-fabric-primary" onclick="FabricApp.goGuide()">撮影をはじめる</button>
   </div>
 
@@ -304,6 +314,11 @@ const FabricApp = (() => {
 
   // ── アクション ──────────────────────────────
 
+  function onNicknameInput(val) {
+    state.nickname = val.trim();
+    localStorage.setItem('fabric_nickname', state.nickname);
+  }
+
   function goTop() {
     state.screen = 'top';
     state.images = [null, null, null];
@@ -357,7 +372,7 @@ const FabricApp = (() => {
       const res = await fetch('/api/fabric-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: state.images }),
+        body: JSON.stringify({ images: state.images, nickname: state.nickname }),
       });
 
       if (!res.ok) {
@@ -384,6 +399,6 @@ const FabricApp = (() => {
     render();
   });
 
-  return { goTop, goGuide, goUpload, onImageSelect, startJudge, goKinuko };
+  return { goTop, goGuide, goUpload, onImageSelect, startJudge, goKinuko, onNicknameInput };
 
 })();

@@ -1,0 +1,19 @@
+{
+  "name": "kinuko-wash-checker",
+  "compatibility_date": "2024-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "pages_build_output_dir": ".",
+  "d1_databases": [
+    {
+      "binding": "kinuko_logs",
+      "database_name": "kinuko-logs",
+      "database_id": "23f4eb17-8410-49a2-b636-3a5a0dfaf54e"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "kinuko_fabric_images",
+      "bucket_name": "kinuko-fabric-images"
+    }
+  ]
+}

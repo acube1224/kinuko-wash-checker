@@ -1,13 +1,18 @@
 /* ============================================================
    長襦袢セルフ判定 - Cloudflare Pages Worker
-   - POST /api/log           : 診断ログ保存
-   - POST /api/fabric-check  : 生地チェッカー AI判定
-   - GET  /hibikinu          : 管理画面（ログイン）
-   - POST /hibikinu/login    : 認証
-   - GET  /hibikinu/data     : ログ一覧JSON（認証済み）
-   - GET  /hibikinu/stats    : 統計JSON（認証済み）
-   - POST /hibikinu/delete   : ログ削除（認証済み）
-   - POST /hibikinu/flag     : テストフラグ切り替え（認証済み）
+   - POST /api/log                  : 診断ログ保存
+   - POST /api/fabric-check         : 生地チェッカー AI判定＋R2保存＋D1ログ
+   - GET  /api/fabric-image/:key    : R2画像取得
+   - GET  /hibikinu                 : 管理画面（ログイン）
+   - POST /hibikinu/login           : 認証
+   - GET  /hibikinu/data            : ログ一覧JSON（認証済み）
+   - GET  /hibikinu/stats           : 統計JSON（認証済み）
+   - POST /hibikinu/delete          : ログ削除（認証済み）
+   - POST /hibikinu/flag            : テストフラグ切り替え（認証済み）
+   - GET  /hibikinu/fabric-data     : 生地ログ一覧JSON（認証済み）
+   - GET  /hibikinu/fabric-stats    : 生地統計JSON（認証済み）
+   - POST /hibikinu/fabric-delete   : 生地ログ削除（認証済み）
+   - POST /hibikinu/fabric-flag     : 生地ログ テストフラグ切替（認証済み）
    ============================================================ */
 
 const ADMIN_PASSWORD = 'Hibikinukosan_checker';
@@ -26,6 +31,11 @@ export default {
     // ── API: 生地チェッカー AI判定 ─────────────────
     if (path === '/api/fabric-check' && request.method === 'POST') {
       return handleFabricCheck(request, env);
+    }
+
+    // ── API: R2画像取得 ────────────────────────────
+    if (path.startsWith('/api/fabric-image/') && request.method === 'GET') {
+      return handleFabricImage(request, env, path);
     }
 
     // ── 管理画面ルート ──────────────────────────────
@@ -49,6 +59,18 @@ export default {
     }
     if (path === '/hibikinu/export' && request.method === 'GET') {
       return handleAdminExport(request, env);
+    }
+    if (path === '/hibikinu/fabric-data' && request.method === 'GET') {
+      return handleFabricAdminData(request, env, url);
+    }
+    if (path === '/hibikinu/fabric-stats' && request.method === 'GET') {
+      return handleFabricAdminStats(request, env);
+    }
+    if (path === '/hibikinu/fabric-delete' && request.method === 'POST') {
+      return handleFabricAdminDelete(request, env);
+    }
+    if (path === '/hibikinu/fabric-flag' && request.method === 'POST') {
+      return handleFabricAdminFlag(request, env);
     }
     if (path.startsWith('/hibikinu/')) {
       return renderAdminApp(request, env, url);
@@ -111,7 +133,7 @@ function checkAuth(request) {
    ============================================================ */
 async function handleFabricCheck(request, env) {
   try {
-    const { images } = await request.json();
+    const { images, nickname } = await request.json();
     if (!images || images.length !== 3) {
       return Response.json({ error: '画像が3枚必要です' }, { status: 400 });
     }
@@ -122,11 +144,9 @@ async function handleFabricCheck(request, env) {
     }
 
     // base64からdata:image/jpeg;base64, を除去
-    const parts = images.map((img, i) => {
+    const parts = images.map((img) => {
       const base64 = img.replace(/^data:image\/\w+;base64,/, '');
-      return {
-        inlineData: { mimeType: 'image/jpeg', data: base64 }
-      };
+      return { inlineData: { mimeType: 'image/jpeg', data: base64 } };
     });
 
     const prompt = `あなたは和服の生地の専門家です。
@@ -214,15 +234,56 @@ async function handleFabricCheck(request, env) {
     const VALID_CLOSEST = ['chirimen','rinzu','habutae','ro','seika','shioze','smooth'];
     if (parsed.fabricKey === 'closest_match') {
       if (!VALID_CLOSEST.includes(parsed.closestFabricKey)) {
-        // 候補キーが不正なら unknown に格下げ
         parsed.fabricKey = 'unknown';
         parsed.closestFabricKey = null;
         parsed.closestReason    = null;
       }
     } else {
-      // closest_match 以外では不要フィールドをクリア
       parsed.closestFabricKey = null;
       parsed.closestReason    = null;
+    }
+
+    // ── R2に画像を保存 ────────────────────────────────
+    const imageUrls = [null, null, null];
+    if (env.kinuko_fabric_images) {
+      const ts = Date.now();
+      for (let i = 0; i < 3; i++) {
+        try {
+          const base64 = images[i].replace(/^data:image\/\w+;base64,/, '');
+          const binary = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+          const key = `fabric/${ts}_${i + 1}.jpg`;
+          await env.kinuko_fabric_images.put(key, binary, {
+            httpMetadata: { contentType: 'image/jpeg' }
+          });
+          imageUrls[i] = key;
+        } catch (e) {
+          console.error(`R2 upload error (image ${i+1}):`, e);
+        }
+      }
+    }
+
+    // ── D1にログを保存 ────────────────────────────────
+    if (env.kinuko_logs) {
+      try {
+        await env.kinuko_logs.prepare(`
+          INSERT INTO fabric_logs
+            (nickname, material_key, fabric_key, closest_fabric_key,
+             confidence, comment, closest_reason,
+             image_url_1, image_url_2, image_url_3, is_test)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        `).bind(
+          nickname || null,
+          parsed.materialKey,
+          parsed.fabricKey,
+          parsed.closestFabricKey || null,
+          parsed.confidence,
+          parsed.comment,
+          parsed.closestReason || null,
+          imageUrls[0], imageUrls[1], imageUrls[2]
+        ).run();
+      } catch (e) {
+        console.error('D1 log error:', e);
+      }
     }
 
     return Response.json(parsed);
@@ -231,6 +292,96 @@ async function handleFabricCheck(request, env) {
     console.error('handleFabricCheck error:', e);
     return Response.json({ error: '予期しないエラーが発生しました' }, { status: 500 });
   }
+}
+
+/* ============================================================
+   API: R2画像取得
+   ============================================================ */
+async function handleFabricImage(request, env, path) {
+  const key = decodeURIComponent(path.replace('/api/fabric-image/', ''));
+  if (!env.kinuko_fabric_images) {
+    return new Response('R2 not configured', { status: 500 });
+  }
+  const obj = await env.kinuko_fabric_images.get(key);
+  if (!obj) return new Response('Not found', { status: 404 });
+  return new Response(obj.body, {
+    headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'max-age=86400' }
+  });
+}
+
+/* ============================================================
+   管理API: 生地ログ一覧
+   ============================================================ */
+async function handleFabricAdminData(request, env, url) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+
+  const showTest = url.searchParams.get('test') === '1';
+  const limit    = parseInt(url.searchParams.get('limit') || '100');
+  const offset   = parseInt(url.searchParams.get('offset') || '0');
+
+  const rows = await env.kinuko_logs.prepare(`
+    SELECT * FROM fabric_logs
+    WHERE is_test = ?
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+  `).bind(showTest ? 1 : 0, limit, offset).all();
+
+  const total = await env.kinuko_logs.prepare(
+    `SELECT COUNT(*) as cnt FROM fabric_logs WHERE is_test = ?`
+  ).bind(showTest ? 1 : 0).first();
+
+  return Response.json({ rows: rows.results, total: total?.cnt || 0 });
+}
+
+/* ============================================================
+   管理API: 生地統計
+   ============================================================ */
+async function handleFabricAdminStats(request, env) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+
+  const [total, fabricDist, materialDist, confDist, daily] = await Promise.all([
+    env.kinuko_logs.prepare(`SELECT COUNT(*) as cnt FROM fabric_logs WHERE is_test = 0`).first(),
+    env.kinuko_logs.prepare(`
+      SELECT fabric_key, COUNT(*) as cnt FROM fabric_logs
+      WHERE is_test = 0 GROUP BY fabric_key ORDER BY cnt DESC`).all(),
+    env.kinuko_logs.prepare(`
+      SELECT material_key, COUNT(*) as cnt FROM fabric_logs
+      WHERE is_test = 0 GROUP BY material_key ORDER BY cnt DESC`).all(),
+    env.kinuko_logs.prepare(`
+      SELECT confidence, COUNT(*) as cnt FROM fabric_logs
+      WHERE is_test = 0 GROUP BY confidence`).all(),
+    env.kinuko_logs.prepare(`
+      SELECT DATE(created_at) as day, COUNT(*) as cnt FROM fabric_logs
+      WHERE is_test = 0 GROUP BY day ORDER BY day DESC LIMIT 30`).all(),
+  ]);
+
+  return Response.json({
+    total: total?.cnt || 0,
+    fabricDist: fabricDist.results,
+    materialDist: materialDist.results,
+    confDist: confDist.results,
+    daily: daily.results,
+  });
+}
+
+/* ============================================================
+   管理API: 生地ログ削除
+   ============================================================ */
+async function handleFabricAdminDelete(request, env) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+  const { id } = await request.json();
+  await env.kinuko_logs.prepare(`DELETE FROM fabric_logs WHERE id = ?`).bind(id).run();
+  return Response.json({ success: true });
+}
+
+/* ============================================================
+   管理API: 生地ログ テストフラグ切り替え
+   ============================================================ */
+async function handleFabricAdminFlag(request, env) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+  const { id, is_test } = await request.json();
+  await env.kinuko_logs.prepare(`UPDATE fabric_logs SET is_test = ? WHERE id = ?`).bind(is_test, id).run();
+  return Response.json({ success: true });
 }
 
 /* ============================================================
@@ -591,6 +742,8 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
 <div class="tabs">
   <button class="tab active" onclick="showTab('stats')">📊 統計レポート</button>
   <button class="tab" onclick="showTab('logs')">📋 ログ一覧</button>
+  <button class="tab" onclick="showTab('fabric-logs')">🧵 生地ログ</button>
+  <button class="tab" onclick="showTab('fabric-stats')">📈 生地統計</button>
 </div>
 
 <!-- 統計パネル -->
@@ -655,6 +808,41 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
   </div>
 </div>
 
+<!-- 生地ログ一覧パネル -->
+<div class="panel" id="panel-fabric-logs">
+  <div class="toolbar">
+    <button class="btn" id="fabric-btn-real" onclick="setFabricTestFilter(0)" style="background:#4a7c6f;color:#fff;">本番のみ</button>
+    <button class="btn" id="fabric-btn-test" onclick="setFabricTestFilter(1)">テストのみ</button>
+  </div>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>日時</th><th>ニックネーム</th>
+          <th>素材</th><th>生地</th><th>候補</th>
+          <th>確信度</th><th>画像1</th><th>画像2</th><th>画像3</th>
+          <th>テスト</th><th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="fabric-log-tbody">
+        <tr><td colspan="12" style="text-align:center;padding:20px;">読み込み中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div id="fabric-log-pager" style="display:flex;gap:8px;padding:12px 20px;align-items:center;"></div>
+</div>
+
+<!-- 生地統計パネル -->
+<div class="panel" id="panel-fabric-stats">
+  <div class="stat-cards" id="fabric-stat-cards">読み込み中...</div>
+  <div class="charts">
+    <div class="chart-box"><h3>生地種類の分布</h3><canvas id="chart-fabric-dist"></canvas></div>
+    <div class="chart-box"><h3>素材カテゴリの分布</h3><canvas id="chart-material-dist"></canvas></div>
+    <div class="chart-box"><h3>確信度の分布</h3><canvas id="chart-conf-dist"></canvas></div>
+    <div class="chart-box"><h3>日別判定数（直近30日）</h3><canvas id="chart-fabric-daily"></canvas></div>
+  </div>
+</div>
+
 <script>
 const LABEL = ${JSON.stringify(LABEL)};
 
@@ -664,13 +852,16 @@ function lbl(type, val) {
 
 // ── タブ切り替え ──────────────────────────────────
 function showTab(name) {
+  const TABS = ['stats','logs','fabric-logs','fabric-stats'];
   document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['stats','logs'][i] === name);
+    t.classList.toggle('active', TABS[i] === name);
   });
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.getElementById('panel-' + name).classList.add('active');
-  if (name === 'stats') loadStats();
-  if (name === 'logs') loadLogs(1);
+  if (name === 'stats')         loadStats();
+  if (name === 'logs')          loadLogs(1);
+  if (name === 'fabric-logs')   loadFabricLogs(1);
+  if (name === 'fabric-stats')  loadFabricStats();
 }
 
 // ── 統計読み込み ──────────────────────────────────
@@ -888,6 +1079,147 @@ function showConfirm(title, msg, cb) {
   document.getElementById('confirm-overlay').classList.add('show');
 }
 function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('show'); }
+
+// ── 生地ログ ─────────────────────────────────────
+const FABRIC_NAME = {
+  chirimen:'ちりめん', rinzu:'綸子', habutae:'羽二重',
+  ro:'絽・紗', seika:'精華パレス', shioze:'塩瀬',
+  smooth:'平織り', unknown:'わからない', closest_match:'候補なし'
+};
+const MATERIAL_NAME = {
+  silk:'絹', cotton:'綿', linen:'麻', poly:'ポリ', other:'その他'
+};
+const CONF_NAME = { high:'高', mid:'中', low:'低' };
+
+let fabricTestFilter = 0;
+let fabricCurrentPage = 1;
+const FABRIC_PER_PAGE = 50;
+
+function setFabricTestFilter(v) {
+  fabricTestFilter = v;
+  document.getElementById('fabric-btn-real').style.background = v === 0 ? '#4a7c6f' : '';
+  document.getElementById('fabric-btn-real').style.color      = v === 0 ? '#fff'    : '';
+  document.getElementById('fabric-btn-test').style.background = v === 1 ? '#c0392b' : '';
+  document.getElementById('fabric-btn-test').style.color      = v === 1 ? '#fff'    : '';
+  loadFabricLogs(1);
+}
+
+async function loadFabricLogs(page) {
+  fabricCurrentPage = page;
+  const offset = (page - 1) * FABRIC_PER_PAGE;
+  const res = await fetch(\`/hibikinu/fabric-data?test=\${fabricTestFilter}&limit=\${FABRIC_PER_PAGE}&offset=\${offset}\`);
+  if (!res.ok) { location.href = '/hibikinu'; return; }
+  const d = await res.json();
+  const tbody = document.getElementById('fabric-log-tbody');
+  if (!d.rows.length) {
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;">データなし</td></tr>';
+  } else {
+    tbody.innerHTML = d.rows.map(r => {
+      const thumb = (url) => url
+        ? \`<a href="/api/fabric-image/\${encodeURIComponent(url)}" target="_blank">
+            <img src="/api/fabric-image/\${encodeURIComponent(url)}"
+              style="width:48px;height:48px;object-fit:cover;border-radius:4px;"></a>\`
+        : '-';
+      return \`<tr>
+        <td>\${r.id}</td>
+        <td style="white-space:nowrap">\${r.created_at?.slice(0,16) || '-'}</td>
+        <td>\${r.nickname || '-'}</td>
+        <td>\${MATERIAL_NAME[r.material_key] || r.material_key || '-'}</td>
+        <td>\${FABRIC_NAME[r.fabric_key] || r.fabric_key || '-'}</td>
+        <td>\${r.closest_fabric_key ? (FABRIC_NAME[r.closest_fabric_key] || r.closest_fabric_key) : '-'}</td>
+        <td>\${CONF_NAME[r.confidence] || r.confidence || '-'}</td>
+        <td>\${thumb(r.image_url_1)}</td>
+        <td>\${thumb(r.image_url_2)}</td>
+        <td>\${thumb(r.image_url_3)}</td>
+        <td>\${r.is_test ? '🧪' : '✅'}</td>
+        <td>
+          <button class="btn btn-sm" onclick="toggleFabricTest(\${r.id}, \${r.is_test})">\${r.is_test ? '本番へ' : 'テストへ'}</button>
+          <button class="btn btn-red btn-sm" onclick="deleteFabricLog(\${r.id})">削除</button>
+        </td>
+      </tr>\`;
+    }).join('');
+  }
+  // ページャー
+  const totalPages = Math.ceil(d.total / FABRIC_PER_PAGE);
+  const pager = document.getElementById('fabric-log-pager');
+  pager.innerHTML = \`
+    <span style="font-size:0.85rem;color:#666;">計 \${d.total} 件 / \${page}/\${totalPages} ページ</span>
+    \${page > 1 ? \`<button class="btn" onclick="loadFabricLogs(\${page-1})">← 前</button>\` : ''}
+    \${page < totalPages ? \`<button class="btn" onclick="loadFabricLogs(\${page+1})">次 →</button>\` : ''}
+  \`;
+}
+
+async function toggleFabricTest(id, current) {
+  await fetch('/hibikinu/fabric-flag', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id, is_test: current ? 0 : 1 })
+  });
+  loadFabricLogs(fabricCurrentPage);
+}
+
+async function deleteFabricLog(id) {
+  if (!confirm('このログを削除しますか？')) return;
+  await fetch('/hibikinu/fabric-delete', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id })
+  });
+  loadFabricLogs(fabricCurrentPage);
+}
+
+// ── 生地統計 ─────────────────────────────────────
+let fabricCharts = {};
+async function loadFabricStats() {
+  const res = await fetch('/hibikinu/fabric-stats');
+  if (!res.ok) { location.href = '/hibikinu'; return; }
+  const d = await res.json();
+
+  document.getElementById('fabric-stat-cards').innerHTML = \`
+    <div class="stat-card"><div class="stat-num">\${d.total}</div><div class="stat-label">総判定数</div></div>
+  \`;
+
+  const drawPie = (id, labels, data, colors) => {
+    if (fabricCharts[id]) fabricCharts[id].destroy();
+    const ctx = document.getElementById(id)?.getContext('2d');
+    if (!ctx) return;
+    fabricCharts[id] = new Chart(ctx, {
+      type: 'pie',
+      data: { labels, datasets: [{ data, backgroundColor: colors }] },
+      options: { plugins: { legend: { position: 'right' } } }
+    });
+  };
+
+  const drawBar = (id, labels, data) => {
+    if (fabricCharts[id]) fabricCharts[id].destroy();
+    const ctx = document.getElementById(id)?.getContext('2d');
+    if (!ctx) return;
+    fabricCharts[id] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ data, backgroundColor: '#4a7c6f88' }] },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  };
+
+  // 生地種類分布
+  const fabricColors = ['#e8a87c','#7cb9e8','#a8e87c','#e87c9a','#b87ce8','#e8d87c','#7ce8d8','#aaa'];
+  drawPie('chart-fabric-dist',
+    d.fabricDist.map(r => FABRIC_NAME[r.fabric_key] || r.fabric_key),
+    d.fabricDist.map(r => r.cnt), fabricColors);
+
+  // 素材分布
+  const matColors = ['#c9a96e','#6eb5c9','#6ec98a','#c96e6e','#999'];
+  drawPie('chart-material-dist',
+    d.materialDist.map(r => MATERIAL_NAME[r.material_key] || r.material_key),
+    d.materialDist.map(r => r.cnt), matColors);
+
+  // 確信度分布
+  drawPie('chart-conf-dist',
+    d.confDist.map(r => CONF_NAME[r.confidence] || r.confidence),
+    d.confDist.map(r => r.cnt), ['#4a7c6f','#a0764b','#c0392b']);
+
+  // 日別
+  const dailyRev = [...d.daily].reverse();
+  drawBar('chart-fabric-daily', dailyRev.map(r => r.day), dailyRev.map(r => r.cnt));
+}
 
 // ── 初期表示 ─────────────────────────────────────
 loadStats();

@@ -113,6 +113,14 @@ function pickReasonChips(chips, answers) {
   // danger を先頭、safe を後回しにする
   const priority = { danger: 0, caution: 1, neutral: 2, safe: 3 };
   const sorted = [...chips].sort((a, b) => priority[a.type] - priority[b.type]);
+
+  // ガード加工チップは必ず表示する（safeで押し出されないよう確保）
+  const guardChip = chips.find(c => c.key === 'option_guard');
+  if (guardChip) {
+    const without = sorted.filter(c => c.key !== 'option_guard');
+    return [guardChip, ...without].slice(0, 5);
+  }
+
   return sorted.slice(0, 5);
 }
 

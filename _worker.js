@@ -130,21 +130,31 @@ async function handleFabricCheck(request, env) {
     });
 
     const prompt = `あなたは和服の生地の専門家です。
-添付された長襦袢の写真3枚（全体像・光沢角度・生地アップ）を見て、生地の種類を判定してください。
+添付された長襦袢の写真3枚（全体像・光沢角度・生地アップ）を見て、素材と生地の種類を判定してください。
 
-【判定ルール】
-必ず以下の選択肢の中から1つだけ選んでください：
+【判定ルール1：素材カテゴリ】
+必ず以下の中から1つ選んでください：
+- silk（絹・シルク）
+- cotton（綿・コットン）
+- linen（麻・リネン）
+- poly（ポリエステル・化繊）
+- other（その他・不明）
+
+【判定ルール2：生地の種類】
+必ず以下の中から1つ選んでください：
 - chirimen（ちりめん：細かいシボがある・光沢が少ない）
 - rinzu（綸子：光沢があり地紋が見える）
 - habutae（羽二重：なめらかで光沢がある薄手）
 - ro（絽・紗：透け感がある夏物）
 - seika（精華パレス：光沢があり薄手）
 - shioze（塩瀬：横畝があり厚手）
+- smooth（一般的な平織り・特徴が少ない）
 - unknown（判定できない）
 
 【出力形式】必ずJSON形式のみで返してください。余計な文章は不要です。
 {
-  "fabricKey": "選択したキー",
+  "materialKey": "素材カテゴリのキー",
+  "fabricKey": "生地種類のキー",
   "confidence": "high または mid または low",
   "comment": "判定根拠を30〜50字程度で日本語で説明"
 }`;
@@ -186,9 +196,11 @@ async function handleFabricCheck(request, env) {
       parsed = { fabricKey: 'unknown', confidence: 'low', comment: '写真からの判定が難しい状態でした。別の角度で撮り直してみてください。' };
     }
 
-    // 想定外のfabricKeyをunknownに補正
-    const VALID_KEYS = ['chirimen','rinzu','habutae','ro','seika','shioze','unknown'];
-    if (!VALID_KEYS.includes(parsed.fabricKey)) parsed.fabricKey = 'unknown';
+    // 想定外のキーを補正
+    const VALID_FABRIC  = ['chirimen','rinzu','habutae','ro','seika','shioze','smooth','unknown'];
+    const VALID_MATERIAL = ['silk','cotton','linen','poly','other'];
+    if (!VALID_FABRIC.includes(parsed.fabricKey))    parsed.fabricKey   = 'unknown';
+    if (!VALID_MATERIAL.includes(parsed.materialKey)) parsed.materialKey = 'other';
 
     return Response.json(parsed);
 

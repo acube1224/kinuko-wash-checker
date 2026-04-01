@@ -27,7 +27,17 @@ const FabricApp = (() => {
     ro:       '絽・紗',
     seika:    '精華パレス',
     shioze:   '塩瀬',
+    smooth:   '平織り・一般的な生地',
     unknown:  'わからない',
+  };
+
+  // 素材カテゴリマッピング（キー→表示名・色）
+  const MATERIAL_LABELS = {
+    silk:    { label: '絹（シルク）',     color: '#7a5530' },
+    cotton:  { label: '綿（コットン）',   color: '#4a7c6f' },
+    linen:   { label: '麻（リネン）',     color: '#6b8c5a' },
+    poly:    { label: 'ポリエステル',     color: '#3d5a6e' },
+    other:   { label: 'その他・不明',     color: '#888888' },
   };
 
   // ── レンダリング ──────────────────────────────
@@ -49,7 +59,7 @@ const FabricApp = (() => {
     return `
 <div class="fabric-screen">
   <div style="padding: 32px 16px 20px; text-align:center;">
-    <div class="fabric-top-logo">🧵</div>
+    <img src="../images/logo.png" alt="絹子さん" style="width:80px; height:80px; object-fit:contain; margin-bottom:12px;">
     <p class="fabric-top-title">その長襦袢、何の生地かな？<br>絹子さんの生地チェッカー</p>
     <p class="fabric-top-sub">prototype ver.</p>
   </div>
@@ -76,10 +86,10 @@ const FabricApp = (() => {
       </div>
     </div>
     <div class="fabric-point-card">
-      <span class="fabric-point-icon">👘</span>
+      <span class="fabric-point-icon">📋</span>
       <div class="fabric-point-body">
-        <strong>そのまま洗濯チェックへ</strong>
-        <span>判定結果を絹子さんチェッカーへ引き継げます</span>
+        <strong>素材と生地の種類がわかる</strong>
+        <span>絹・綿・麻・ポリなど素材から生地の種類まで判定します</span>
       </div>
     </div>
   </div>
@@ -204,16 +214,20 @@ const FabricApp = (() => {
   // 結果画面
   function renderResult() {
     const r = state.result;
-    const displayName = FABRIC_NAMES[r.fabricKey] || r.fabricKey;
+    const fabricName = FABRIC_NAMES[r.fabricKey] || r.fabricKey;
+    const matInfo = MATERIAL_LABELS[r.materialKey] || MATERIAL_LABELS.other;
     const confLabel = r.confidence === 'high' ? '確信度：高'
                     : r.confidence === 'mid'  ? '確信度：中'
                     : '確信度：低';
     const confDot = r.confidence;
 
-    // 絹子さんチェッカーへのURL
-    const linkToKinuko = r.fabricKey !== 'unknown'
-      ? `/?silkFabric=${r.fabricKey}`
-      : '/';
+    // 素材カテゴリバッジ
+    const materialBadge = `<span style="
+      display:inline-block; padding:4px 14px;
+      background:${matInfo.color}20; color:${matInfo.color};
+      border:1px solid ${matInfo.color}60;
+      border-radius:20px; font-size:0.82rem; font-weight:700;
+      margin-bottom:8px;">${matInfo.label}</span>`;
 
     return `
 <div class="fabric-screen">
@@ -226,7 +240,8 @@ const FabricApp = (() => {
   <div style="padding: 12px 0 0;">
     <div class="fabric-result-card">
       <p class="fabric-result-label">AI判定結果</p>
-      <p class="fabric-result-name">${displayName}</p>
+      ${materialBadge}
+      <p class="fabric-result-name">${fabricName}</p>
       <div class="fabric-confidence">
         <span class="fabric-confidence-dot ${confDot}"></span>
         ${confLabel}
@@ -241,10 +256,6 @@ const FabricApp = (() => {
     </p>
 
     <div class="fabric-btn-area">
-      <button class="btn-fabric-primary"
-        onclick="FabricApp.goKinuko('${linkToKinuko}')">
-        👘 この生地で絹子さんチェッカーへ
-      </button>
       <button class="btn-fabric-secondary"
         onclick="FabricApp.goTop()">
         撮り直す

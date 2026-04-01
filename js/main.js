@@ -190,6 +190,16 @@ const App = (() => {
     if (nextBtn) nextBtn.disabled = false;
   }
 
+  /* ── オプションチェックボックスのトグル ── */
+  function toggleOption(key, checked) {
+    if (checked) {
+      state.answers[key] = true;
+    } else {
+      delete state.answers[key];
+    }
+    // チェックボックスは再レンダリングせずに状態のみ更新
+  }
+
   /* ── 素材推定4問専用の選択（render不使用） ── */
   function selectChoiceMg(key, id) {
     state.answers[key] = id;
@@ -475,7 +485,7 @@ const App = (() => {
     goTop, goGuide, startQuiz,
     prevQuestion, selectChoice, selectChoiceMg,
     nextQuestion, confirmMaterial,
-    showResult, resultAction, init
+    showResult, resultAction, toggleOption, init
   };
 })();
 

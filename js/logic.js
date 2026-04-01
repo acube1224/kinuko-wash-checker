@@ -31,6 +31,20 @@ function calcJudgment(answers) {
     }
   });
 
+  // --- オプション補正 ---
+
+  // ガード加工（パールトーン）あり → スコア -3
+  if (answers.optionGuard) {
+    score -= 3;
+    chips.push({ ...REASON_CHIPS['option_guard'], key: 'option_guard' });
+  }
+
+  // ビンテージ → スコア +3
+  if (answers.optionVintage) {
+    score += 3;
+    chips.push({ ...REASON_CHIPS['option_vintage'], key: 'option_vintage' });
+  }
+
   // --- 特殊ルール（強制上書き） ---
 
   // 素材が化繊（ポリ・シルック） → 即A（他の条件より優先）

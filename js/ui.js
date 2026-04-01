@@ -108,6 +108,34 @@ function renderQuestion(q, qIndex, answers, totalQ) {
     </li>
   `).join('');
 
+  // Q1後：ビンテージチェックボックス
+  const vintageHTML = (q.key === 'material') ? `
+  <div class="option-checkbox-wrap" style="margin-top:16px; padding:14px 16px; background:rgba(160,118,75,0.07); border-radius:12px;">
+    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.92rem; color:var(--col-text);">
+      <input type="checkbox" id="optionVintage"
+        onchange="App.toggleOption('optionVintage', this.checked)"
+        ${answers.optionVintage ? 'checked' : ''}
+        style="width:18px; height:18px; accent-color:var(--col-main); cursor:pointer;"
+      >
+      <span>🏺 <strong>ビンテージ品・かなり古いお品</strong>（経年劣化あり）</span>
+    </label>
+    <p style="font-size:0.8rem; color:var(--col-sub); margin:6px 0 0 28px;">チェックを入れると、経年劣化によるリスクとして+3点加算されます。</p>
+  </div>` : '';
+
+  // Q2s後：ガード加工チェックボックス（ちりめん選択時は強制C判定のため補足を表示）
+  const guardHTML = (q.key === 'silkFabric') ? `
+  <div class="option-checkbox-wrap" style="margin-top:16px; padding:14px 16px; background:rgba(74,158,111,0.07); border-radius:12px;">
+    <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.92rem; color:var(--col-text);">
+      <input type="checkbox" id="optionGuard"
+        onchange="App.toggleOption('optionGuard', this.checked)"
+        ${answers.optionGuard ? 'checked' : ''}
+        style="width:18px; height:18px; accent-color:#2e7d5a; cursor:pointer;"
+      >
+      <span>🛡️ <strong>ガード加工（パールトーン等）済み</strong></span>
+    </label>
+    <p style="font-size:0.8rem; color:var(--col-sub); margin:6px 0 0 28px;">チェックを入れると、撥水・防汚加工によるリスク軽減として−3点調整されます。※ちりめんは加工ありでも自宅洗い非推奨です。</p>
+  </div>` : '';
+
   return `
 <div class="screen">
   <div class="nav-bar">
@@ -130,6 +158,8 @@ function renderQuestion(q, qIndex, answers, totalQ) {
     <ul class="choice-list">
       ${choicesHTML}
     </ul>
+    ${vintageHTML}
+    ${guardHTML}
   </div>
 
   <div class="btn-footer">
@@ -372,6 +402,16 @@ function buildRadarData(ans, grade) {
     fabricScore = getSafetyScore('fabric', ans.fabric);
   } else {
     fabricScore = 5;
+  }
+
+  // ガード加工：生地軸に+2（上限10）
+  if (ans.optionGuard) {
+    fabricScore = Math.min(10, fabricScore + 2);
+  }
+
+  // ビンテージ：生地軸に-3（下限0）
+  if (ans.optionVintage) {
+    fabricScore = Math.max(0, fabricScore - 3);
   }
 
   // 過去の水洗い：水処理歴なし/不明のときスキップ → 3

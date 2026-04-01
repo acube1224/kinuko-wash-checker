@@ -239,7 +239,11 @@ const REASON_CHIPS = {
   color_mid:     { label: '中間色',                      type: 'neutral' },
   color_dark:    { label: '濃色（色落ち注意）',          type: 'danger' },
   color_multi:   { label: '多色・ぼかし（にじみ注意）', type: 'caution' },
-  color_unknown: { label: '地色が不明',                  type: 'caution' }
+  color_unknown: { label: '地色が不明',                  type: 'caution' },
+
+  // オプション
+  option_guard:   { label: 'ガード加工（パールトーン）あり', type: 'safe' },
+  option_vintage: { label: 'ビンテージ品（経年劣化注意）',   type: 'danger' }
 };
 
 

@@ -110,7 +110,8 @@ async function handleSaveLog(request, env) {
       grade, score, duration_sec, session_id,
       ans_material, ans_silk_fabric, ans_fabric,
       ans_tailoring, ans_decoration, ans_water_history,
-      ans_past_result, ans_color
+      ans_past_result, ans_color,
+      ans_option_guard, ans_option_vintage
     } = body;
 
     const referrer = request.headers.get('Referer') || '';
@@ -127,13 +128,15 @@ async function handleSaveLog(request, env) {
          ans_material, ans_silk_fabric, ans_fabric,
          ans_tailoring, ans_decoration, ans_water_history,
          ans_past_result, ans_color,
+         ans_option_guard, ans_option_vintage,
          ip_hash, device)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       grade, score, duration_sec || null, session_id || null, referrer,
       ans_material || null, ans_silk_fabric || null, ans_fabric || null,
       ans_tailoring || null, ans_decoration || null, ans_water_history || null,
       ans_past_result || null, ans_color || null,
+      ans_option_guard ? 1 : 0, ans_option_vintage ? 1 : 0,
       ip_hash || null, device || null
     ).run();
 
@@ -216,7 +219,7 @@ async function handleAdminData(request, env, url) {
 async function handleAdminStats(request, env) {
   if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
 
-  const [gradeCount, daily, materialDist, fabricDist, tailoringDist, waterHistoryDist, colorDist, totalRow] = await Promise.all([
+  const [gradeCount, daily, materialDist, fabricDist, tailoringDist, waterHistoryDist, colorDist, totalRow, optionRow] = await Promise.all([
     env.kinuko_logs.prepare(
       `SELECT grade, COUNT(*) as cnt FROM diagnosis_logs WHERE is_test=0 GROUP BY grade`
     ).all(),
@@ -240,6 +243,9 @@ async function handleAdminStats(request, env) {
     ).all(),
     env.kinuko_logs.prepare(
       `SELECT COUNT(*) as cnt, AVG(score) as avg_score FROM diagnosis_logs WHERE is_test=0`
+    ).first(),
+    env.kinuko_logs.prepare(
+      `SELECT SUM(ans_option_guard) as guard_cnt, SUM(ans_option_vintage) as vintage_cnt FROM diagnosis_logs WHERE is_test=0`
     ).first()
   ]);
 
@@ -252,7 +258,9 @@ async function handleAdminStats(request, env) {
     waterHistoryDist: waterHistoryDist.results,
     colorDist: colorDist.results,
     total: totalRow.cnt,
-    avgScore: Math.round((totalRow.avg_score || 0) * 10) / 10
+    avgScore: Math.round((totalRow.avg_score || 0) * 10) / 10,
+    guardCnt: optionRow.guard_cnt || 0,
+    vintageCnt: optionRow.vintage_cnt || 0
   }), { headers: { 'Content-Type': 'application/json' } });
 }
 
@@ -491,7 +499,7 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
           <th><input type="checkbox" id="check-all" onchange="toggleAll(this)"></th>
           <th>ID</th><th>日時</th><th>判定</th><th>スコア</th>
           <th>素材</th><th>生地</th><th>仕立て</th><th>装飾</th>
-          <th>水処理</th><th>地色</th><th>端末</th><th>重複</th><th>秒</th><th>操作</th>
+          <th>水処理</th><th>地色</th><th>🛡️</th><th>🏺</th><th>端末</th><th>重複</th><th>秒</th><th>操作</th>
         </tr>
       </thead>
       <tbody id="log-tbody">
@@ -675,6 +683,8 @@ async function loadLogs(page) {
       <td>\${lbl('decoration', r.ans_decoration)}</td>
       <td>\${lbl('waterHistory', r.ans_water_history)}</td>
       <td>\${lbl('color', r.ans_color)}</td>
+      <td style="text-align:center">\${r.ans_option_guard   ? '🛡️' : '-'}</td>
+      <td style="text-align:center">\${r.ans_option_vintage ? '🏺' : '-'}</td>
       <td style="font-size:0.75rem">\${devIcon} \${r.device || '-'}</td>
       <td style="text-align:center">\${dupBadge}</td>
       <td>\${r.duration_sec || '-'}</td>

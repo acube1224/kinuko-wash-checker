@@ -484,6 +484,28 @@ function renderDetail(result) {
     `;
   }).filter(Boolean).join('');
 
+  // オプション行（ガード加工・ビンテージ）
+  const optionRows = [
+    ans.optionGuard ? `
+      <div class="detail-item">
+        <span class="detail-item-icon">🟢</span>
+        <div class="detail-item-body">
+          <p class="detail-item-label">ガード加工</p>
+          <p class="detail-item-value">✓ あり</p>
+          <p class="detail-item-note">→ 撥水・防汚加工により生地の膨潤耐性が増しているためリスク軽減と評価しています。</p>
+        </div>
+      </div>` : null,
+    ans.optionVintage ? `
+      <div class="detail-item">
+        <span class="detail-item-icon">🔴</span>
+        <div class="detail-item-body">
+          <p class="detail-item-label">ビンテージ</p>
+          <p class="detail-item-value">⚠ あり</p>
+          <p class="detail-item-note">→ 経年劣化により生地が弱くなっている可能性があるためリスク要因として評価しています。</p>
+        </div>
+      </div>` : null,
+  ].filter(Boolean).join('');
+
   return `
 <div class="screen">
   <div class="nav-bar">
@@ -503,6 +525,7 @@ function renderDetail(result) {
 
     <div class="detail-card">
       ${summaryRows}
+      ${optionRows}
     </div>
   </div>
 

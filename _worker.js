@@ -1107,7 +1107,7 @@ function setFabricTestFilter(v) {
 async function loadFabricLogs(page) {
   fabricCurrentPage = page;
   const offset = (page - 1) * FABRIC_PER_PAGE;
-  const res = await fetch(`/hibikinu/fabric-data?test=${fabricTestFilter}&limit=${FABRIC_PER_PAGE}&offset=${offset}`, { credentials: 'same-origin' });
+  const res = await fetch(\`/hibikinu/fabric-data?test=\${fabricTestFilter}&limit=\${FABRIC_PER_PAGE}&offset=\${offset}\`, { credentials: 'same-origin' });
   if (!res.ok) { location.href = '/hibikinu'; return; }
   const d = await res.json();
   const tbody = document.getElementById('fabric-log-tbody');

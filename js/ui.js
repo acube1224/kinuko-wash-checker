@@ -457,21 +457,18 @@ function renderDetail(result) {
     </div>
   </div>` : '';
 
-  // 質問ごとの回答サマリーを生成
-  const summaryRows = QUESTIONS.map(q => {
+  // 質問1行分のHTMLを生成するヘルパー
+  function makeQRow(q) {
     const answerId = ans[q.key];
     const choice = q.choices.find(c => c.id === answerId);
     if (!choice) return null;
-
     const chipKey = `${q.key}_${answerId}`;
     const chip = REASON_CHIPS[chipKey];
     const note = DETAIL_NOTES[chipKey];
-
     const riskIcon = chip?.type === 'danger'  ? '🔴'
                    : chip?.type === 'caution' ? '🟡'
                    : chip?.type === 'safe'    ? '🟢'
                    : '⚪';
-
     return `
       <div class="detail-item">
         <span class="detail-item-icon">${riskIcon}</span>
@@ -480,22 +477,11 @@ function renderDetail(result) {
           <p class="detail-item-value">${choice.icon} ${choice.label}</p>
           ${note ? `<p class="detail-item-note">${note}</p>` : ''}
         </div>
-      </div>
-    `;
-  }).filter(Boolean).join('');
+      </div>`;
+  }
 
-  // オプション行（ガード加工・ビンテージ）
-  const optionRows = [
-    ans.optionGuard ? `
-      <div class="detail-item">
-        <span class="detail-item-icon">🟢</span>
-        <div class="detail-item-body">
-          <p class="detail-item-label">ガード加工</p>
-          <p class="detail-item-value">✓ あり</p>
-          <p class="detail-item-note">→ 撥水・防汚加工により生地の膨潤耐性が増しているためリスク軽減と評価しています。</p>
-        </div>
-      </div>` : null,
-    ans.optionVintage ? `
+  // オプション行HTML
+  const vintageRow = ans.optionVintage ? `
       <div class="detail-item">
         <span class="detail-item-icon">🔴</span>
         <div class="detail-item-body">
@@ -503,8 +489,26 @@ function renderDetail(result) {
           <p class="detail-item-value">⚠ あり</p>
           <p class="detail-item-note">→ 経年劣化により生地が弱くなっている可能性があるためリスク要因として評価しています。</p>
         </div>
-      </div>` : null,
-  ].filter(Boolean).join('');
+      </div>` : '';
+
+  const guardRow = ans.optionGuard ? `
+      <div class="detail-item">
+        <span class="detail-item-icon">🟢</span>
+        <div class="detail-item-body">
+          <p class="detail-item-label">ガード加工</p>
+          <p class="detail-item-value">✓ あり</p>
+          <p class="detail-item-note">→ 撥水・防汚加工により生地の膨潤耐性が増しているためリスク軽減と評価しています。</p>
+        </div>
+      </div>` : '';
+
+  // Q順に並べ、Q1の後にビンテージ・Q2s(silkFabric)の後にガード加工を挿入
+  const summaryRows = QUESTIONS.map(q => {
+    if (q.key === 'materialGuess') return null; // 素材推定は非表示
+    const row = makeQRow(q);
+    if (q.key === 'material')    return (row || '') + vintageRow;
+    if (q.key === 'silkFabric')  return (row || '') + guardRow;
+    return row;
+  }).filter(Boolean).join('');
 
   return `
 <div class="screen">
@@ -525,7 +529,6 @@ function renderDetail(result) {
 
     <div class="detail-card">
       ${summaryRows}
-      ${optionRows}
     </div>
   </div>
 

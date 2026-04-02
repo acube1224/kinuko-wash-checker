@@ -176,15 +176,18 @@ async function handleFabricCheck(request, env) {
   closestReason にその理由を400字前後で日本語で記入してください。
 
 全く判断できない場合のみ fabricKey に "unknown" を返してください。
+unknownの場合でも、最も近いと思われる生地の種類名（日本語の一般名称）があれば unknownHint に記入してください（例：「ニット生地」「デニム」「フリース」など。長襦袢の候補リスト外でも可）。
 
 【出力形式】必ずJSON形式のみで返してください。余計な文章は不要です。
+comment および closestReason の説明文には、判定に使用した生地種類リストの内容（キー名や括弧書きの説明）を列挙しないでください。あくまで目の前の生地の特徴と判定根拠を説明してください。
 {
   "materialKey": "素材カテゴリのキー",
   "fabricKey": "生地種類のキー または closest_match または unknown",
   "confidence": "high または mid または low",
-  "comment": "判定根拠を400字前後で日本語で説明。生地の特徴（光沢・シボ・織り目・透け感など）を具体的に述べ、判定の根拠と注意点も含めること",
+  "comment": "判定根拠を400字前後で日本語で説明。生地の特徴（光沢・シボ・織り目・透け感など）を具体的に述べ、判定の根拠と注意点も含めること。unknownの場合は最も近いと思われる生地種類名も日本語で明記すること",
   "closestFabricKey": "closest_match時のみ記入。それ以外はnull",
-  "closestReason": "closest_match時のみ記入。それ以外はnull"
+  "closestReason": "closest_match時のみ記入。それ以外はnull",
+  "unknownHint": "unknown時のみ記入。最も近いと思われる生地の種類名を日本語で（例：ニット生地、デニム）。それ以外はnull"
 }`;
 
     const geminiRes = await fetch(

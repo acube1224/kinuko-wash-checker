@@ -216,9 +216,18 @@ const FabricApp = (() => {
   function renderResult() {
     const r = state.result;
     const isClosest = r.fabricKey === 'closest_match';
+    const isUnknown = r.fabricKey === 'unknown';
     const fabricName = isClosest
       ? 'リストの生地には該当しませんでした'
+      : isUnknown
+      ? 'わからない'
       : (FABRIC_NAMES[r.fabricKey] || r.fabricKey);
+
+    // unknown時のヒント表示
+    const unknownHintHtml = isUnknown && r.unknownHint ? `
+      <p style="font-size:0.88rem; color:#888; margin-top:4px;">
+        （${r.unknownHint} の可能性）
+      </p>` : '';
     const matInfo = MATERIAL_LABELS[r.materialKey] || MATERIAL_LABELS.other;
     const confLabel = r.confidence === 'high' ? '確信度：高'
                     : r.confidence === 'mid'  ? '確信度：中'
@@ -267,6 +276,7 @@ const FabricApp = (() => {
       <p class="fabric-result-label">AI判定結果</p>
       ${materialBadge}
       <p class="fabric-result-name${isClosest ? ' no-match' : ''}">${fabricName}</p>
+      ${unknownHintHtml}
       <div class="fabric-confidence">
         <span class="fabric-confidence-dot ${confDot}"></span>
         ${confLabel}

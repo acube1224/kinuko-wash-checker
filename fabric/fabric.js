@@ -257,11 +257,11 @@ const FabricApp = (() => {
       margin-bottom:8px;">${matInfo.label}</span>`;
 
     // closest_match の場合の候補カード
-    const closestCard = isClosest && r.closestFabricKey ? `
+    const closestCard = isClosest && r.closestName ? `
     <div class="fabric-closest-card">
       <p class="fabric-closest-label">🔍 最も近い生地</p>
-      <p class="fabric-closest-name">${FABRIC_NAMES[r.closestFabricKey] || r.closestFabricKey}</p>
-      <p class="fabric-closest-desc">候補の中で最も近いのはこれです。</p>
+      <p class="fabric-closest-name">${r.closestName}</p>
+      <p class="fabric-closest-desc">リスト外ですが、最もこれに近い生地と判断しました。</p>
       <p class="fabric-closest-reason">💬 ${r.closestReason}</p>
     </div>` : '';
 

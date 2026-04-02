@@ -170,10 +170,10 @@ async function handleFabricCheck(request, env) {
 - shioze（塩瀬：横畝（横方向の凹凸）がはっきりある・厚手でしっかりした生地感・光沢はやや抑えめ）
 - smooth（一般的な平織り・上記のいずれの特徴も明確でない）
 
-リストのいずれにも明確に該当しないが、最も近い候補があると判断した場合は：
+リストのいずれにも明確に該当しない場合は：
   fabricKey に "closest_match" を返し、
-  closestFabricKey にそのキーを、
-  closestReason にその理由を400字前後で日本語で記入してください。
+  closestName にリストに縛られない社会一般的な生地名を日本語で記入してください（例：「フランネル」「ニット生地」「デニム」「ガーゼ」「タフタ」など。長襦袢用リスト外の名称でも構いません）。
+  closestReason にその生地名と判断した理由を400字前後で日本語で記入してください。
 
 全く判断できない場合のみ fabricKey に "unknown" を返してください。
 unknownの場合でも、最も近いと思われる生地の種類名（日本語の一般名称）があれば unknownHint に記入してください（例：「ニット生地」「デニム」「フリース」など。長襦袢の候補リスト外でも可）。
@@ -185,8 +185,8 @@ comment および closestReason の説明文には、判定に使用した生地
   "fabricKey": "生地種類のキー または closest_match または unknown",
   "confidence": "high または mid または low",
   "comment": "判定根拠を400字前後で日本語で説明。生地の特徴（光沢・シボ・織り目・透け感など）を具体的に述べ、判定の根拠と注意点も含めること。unknownの場合は最も近いと思われる生地種類名も日本語で明記すること",
-  "closestFabricKey": "closest_match時のみ記入。それ以外はnull",
-  "closestReason": "closest_match時のみ記入。それ以外はnull",
+  "closestName": "closest_match時のみ記入。社会一般的な生地名を日本語で（例：フランネル、ニット生地）。それ以外はnull",
+  "closestReason": "closest_match時のみ記入。その生地名と判断した理由を400字前後で。それ以外はnull",
   "unknownHint": "unknown時のみ記入。最も近いと思われる生地の種類名を日本語で（例：ニット生地、デニム）。それ以外はnull"
 }`;
 
@@ -233,17 +233,17 @@ comment および closestReason の説明文には、判定に使用した生地
     if (!VALID_FABRIC.includes(parsed.fabricKey))     parsed.fabricKey   = 'unknown';
     if (!VALID_MATERIAL.includes(parsed.materialKey)) parsed.materialKey = 'other';
 
-    // closest_match のとき closestFabricKey が有効か確認
-    const VALID_CLOSEST = ['chirimen','rinzu','habutae','ro','seika','shioze','smooth'];
+    // closest_match のとき closestName が存在するか確認
     if (parsed.fabricKey === 'closest_match') {
-      if (!VALID_CLOSEST.includes(parsed.closestFabricKey)) {
-        parsed.fabricKey = 'unknown';
-        parsed.closestFabricKey = null;
-        parsed.closestReason    = null;
+      if (!parsed.closestName || typeof parsed.closestName !== 'string') {
+        // closestNameがなければunknownに降格
+        parsed.fabricKey    = 'unknown';
+        parsed.closestName  = null;
+        parsed.closestReason = null;
       }
     } else {
-      parsed.closestFabricKey = null;
-      parsed.closestReason    = null;
+      parsed.closestName   = null;
+      parsed.closestReason = null;
     }
 
     // ── R2に画像を保存 ────────────────────────────────
@@ -278,7 +278,7 @@ comment および closestReason の説明文には、判定に使用した生地
           nickname || null,
           parsed.materialKey,
           parsed.fabricKey,
-          parsed.closestFabricKey || null,
+          parsed.closestName || null,
           parsed.confidence,
           parsed.comment,
           parsed.closestReason || null,

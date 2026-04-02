@@ -221,7 +221,19 @@
 /* ── ローディング ── */
 .fabric-loading {
   text-align: center;
-  padding: 60px 24px;
+  padding: 48px 24px 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.fabric-loading-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: 24px;
+  opacity: 0.85;
 }
 
 .fabric-loading-spinner {
@@ -242,6 +254,24 @@
   font-size: 1rem;
   color: var(--col-sub);
   font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.fabric-loading-timer {
+  font-size: 4rem;
+  font-weight: 900;
+  color: #a0764b;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+
+.fabric-loading-timer-unit {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #c49a6c;
+  margin-left: 4px;
+  vertical-align: baseline;
 }
 
 /* ── 結果画面 ── */

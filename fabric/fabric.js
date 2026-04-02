@@ -14,11 +14,20 @@ const FabricApp = (() => {
     loadingSeconds: 0,
   };
 
-  // 撮影スロット定義
+  // 撮影スロット定義（新3枚構成）
   const SLOTS = [
-    { label: '生地の目・接写',       hint: '生地の織り目がわかるよう、できるだけ寄って撮影' },
-    { label: '光沢感・マット感',     hint: '斜めから光を当て、光沢感やマット感がわかるように撮影' },
-    { label: '紋様・透け感',         hint: '地紋や透け感がわかる箇所に近寄って撮影（無地の場合は別角度で）' },
+    {
+      label: '生地の目・接写',
+      hint:  'できるだけ寄って、織り目・シボがはっきりわかるように撮影',
+    },
+    {
+      label: '光沢感・マット感',
+      hint:  '斜めから光を当て、光沢感やマット感がわかるように撮影',
+    },
+    {
+      label: '紋様・透け感',
+      hint:  '地紋・透け感がわかる箇所を中心に撮影（無地は別角度で）',
+    },
   ];
 
   // 生地名マッピング（キー→表示名）
@@ -63,7 +72,7 @@ const FabricApp = (() => {
   <div style="padding: 32px 16px 20px; text-align:center;">
     <img src="../images/logo.png" alt="絹子さん" style="width:80px; height:80px; object-fit:contain; margin-bottom:12px;">
     <p class="fabric-top-title">その長襦袢、何の生地かな？<br>絹子さんのAI生地チェッカー</p>
-    <p class="fabric-top-sub">Ver 1.50</p>
+    <p class="fabric-top-sub">Ver 1.60</p>
   </div>
 
   <p style="font-size:0.9rem; color:#6e6058; text-align:center; padding:0 24px 20px; line-height:1.7;">
@@ -77,7 +86,7 @@ const FabricApp = (() => {
       <span class="fabric-point-icon">📸</span>
       <div class="fabric-point-body">
         <strong>3枚撮影するだけ</strong>
-        <span>全体・光沢・アップの3枚を順番に撮影します</span>
+        <span>織り目・光沢・紋様の3枚を順番に撮影します</span>
       </div>
     </div>
     <div class="fabric-point-card">
@@ -121,28 +130,30 @@ const FabricApp = (() => {
   </div>
 
   <p class="fabric-page-title">3枚の写真を撮影します</p>
-  <p class="fabric-page-sub">それぞれのポイントを押さえて撮影すると、より正確に判定できます。</p>
+  <p class="fabric-page-sub">それぞれのポイントを押さえて撮影すると、より正確に判定できます。<br>
+    <span style="font-size:0.75rem; color:#bbb;">写真は自動的に正方形にトリミングされます。<br>被写体を中心に撮影してください。</span>
+  </p>
 
   <div class="guide-cards">
     <div class="guide-card">
       <div class="guide-card-num">1</div>
       <div class="guide-card-body">
         <strong>生地の目・接写</strong>
-        <span>生地の織り目・シボがわかるよう、できるだけ寄って撮影してください</span>
+        <span>できるだけ寄って撮影し、織り目・シボをはっきり写してください。生地の中心を画面に収めるように撮影します。</span>
       </div>
     </div>
     <div class="guide-card">
       <div class="guide-card-num">2</div>
       <div class="guide-card-body">
         <strong>光沢感・マット感</strong>
-        <span>斜めから光を当て、光沢感やマット感がはっきりわかるように撮影してください</span>
+        <span>斜めから光を当て、光沢感やマット感がはっきりわかるように撮影してください。光の反射が中心に来るように構図を合わせます。</span>
       </div>
     </div>
     <div class="guide-card">
       <div class="guide-card-num">3</div>
       <div class="guide-card-body">
         <strong>紋様・透け感</strong>
-        <span>地紋や透け感がわかる箇所に近寄って撮影してください（無地の場合は別角度で）</span>
+        <span>地紋や透け感がわかる箇所を中心に近寄って撮影してください。無地の場合は、素材感がわかる別角度で撮影します。</span>
       </div>
     </div>
   </div>
@@ -206,10 +217,11 @@ const FabricApp = (() => {
     return `
 <div class="fabric-screen">
   <div class="fabric-loading">
+    <img src="../images/logo.png" alt="絹子さん" class="fabric-loading-logo">
     <div class="fabric-loading-spinner"></div>
     <p class="fabric-loading-text">絹子さんAIが判定中…</p>
-    <p id="fabric-loading-timer" style="font-size:1.1rem; font-weight:700; color:#a0764b; margin-top:6px; letter-spacing:0.05em;">${state.loadingSeconds}秒</p>
-    <p style="font-size:0.78rem; color:#bbb; margin-top:4px;">しばらくお待ちください</p>
+    <p id="fabric-loading-timer" class="fabric-loading-timer">${state.loadingSeconds}<span class="fabric-loading-timer-unit">秒</span></p>
+    <p style="font-size:0.78rem; color:#bbb; margin-top:8px;">しばらくお待ちください</p>
   </div>
 </div>`;
   }
@@ -259,7 +271,6 @@ const FabricApp = (() => {
     </div>` : '';
 
     // 一般名の補足表示（リスト内判定かつgeneralNameがある場合）
-    // 条件：確信度60%以下 OR generalNameがある（リストと異なる一般名）
     const showGeneralName = !isClosest && !isUnknown && r.generalName &&
                             typeof r.generalName === 'string';
     const generalNameHtml = showGeneralName ? `
@@ -378,22 +389,25 @@ const FabricApp = (() => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // 画像をリサイズしてbase64化（精度向上のため最大1280px）
+    // 画像を中央クロップして768×768pxに変換（最適タイルサイズ）
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
+        const TARGET = 768;
         const canvas = document.createElement('canvas');
-        const MAX = 1280;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-          else       { w = Math.round(w * MAX / h); h = MAX; }
-        }
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        state.images[index] = canvas.toDataURL('image/jpeg', 0.85);
+        canvas.width  = TARGET;
+        canvas.height = TARGET;
+        const ctx = canvas.getContext('2d');
+
+        // 短辺を基準に中央クロップ
+        const size = Math.min(img.width, img.height);
+        const sx = (img.width  - size) / 2;
+        const sy = (img.height - size) / 2;
+
+        // クロップしながら 768×768 に描画
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, TARGET, TARGET);
+        state.images[index] = canvas.toDataURL('image/jpeg', 0.88);
         render();
       };
       img.src = e.target.result;
@@ -407,7 +421,7 @@ const FabricApp = (() => {
     state.loadingTimer = setInterval(() => {
       state.loadingSeconds += 1;
       const el = document.getElementById('fabric-loading-timer');
-      if (el) el.textContent = state.loadingSeconds + '秒';
+      if (el) el.innerHTML = state.loadingSeconds + '<span class="fabric-loading-timer-unit">秒</span>';
     }, 1000);
   }
 

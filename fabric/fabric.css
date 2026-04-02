@@ -467,41 +467,51 @@
 }
 
 /* ── ニックネーム入力欄 ── */
-.fabric-nickname-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
+/* 結果画面：撮影写真サムネイル */
+.fabric-result-thumbs {
+  margin: 0 16px 16px;
   background: #faf7f3;
   border: 1px solid #e8ddd4;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 12px 14px;
 }
 
-.fabric-nickname-label {
+.fabric-result-thumbs-label {
   font-size: 0.78rem;
   font-weight: 700;
   color: #a0764b;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  text-align: center;
 }
 
-.fabric-nickname-input {
-  border: 1px solid #ddd0c8;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 0.95rem;
-  color: var(--col-text);
-  background: #fff;
-  outline: none;
-  font-family: var(--font-sans);
-  transition: border-color 0.2s;
+.fabric-result-thumbs-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }
 
-.fabric-nickname-input:focus {
-  border-color: #a0764b;
+.fabric-result-thumb-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  max-width: 100px;
 }
 
-.fabric-nickname-hint {
-  font-size: 0.72rem;
-  color: #bbb;
+.fabric-result-thumb {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #ddd0c8;
+  background: #eee;
+}
+
+.fabric-result-thumb-label {
+  font-size: 0.68rem;
+  color: #888;
+  text-align: center;
+  line-height: 1.3;
 }

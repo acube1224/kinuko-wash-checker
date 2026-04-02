@@ -10,7 +10,7 @@ const FabricApp = (() => {
     screen: 'top',   // top | guide | upload | loading | result | error
     images: [null, null, null],  // base64 x3
     result: null,
-    nickname: localStorage.getItem('fabric_nickname') || '',
+
   };
 
   // 撮影スロット定義
@@ -96,15 +96,6 @@ const FabricApp = (() => {
   </div>
 
   <div style="padding: 0 16px 20px;">
-    <div class="fabric-nickname-wrap">
-      <label class="fabric-nickname-label">ニックネーム（任意）</label>
-      <input type="text" id="fabric-nickname" class="fabric-nickname-input"
-        placeholder="例：きぬこ"
-        maxlength="20"
-        value="${state.nickname}"
-        oninput="FabricApp.onNicknameInput(this.value)">
-      <span class="fabric-nickname-hint">判定ログに記録されます。省略可。</span>
-    </div>
     <button class="btn-fabric-primary" onclick="FabricApp.goGuide()">撮影をはじめる</button>
   </div>
 
@@ -251,6 +242,17 @@ const FabricApp = (() => {
       <p class="fabric-closest-reason">💬 ${r.closestReason}</p>
     </div>` : '';
 
+    // 撮影写真サムネイル
+    const thumbsHtml = `
+    <div class="fabric-result-thumbs">
+      <p class="fabric-result-thumbs-label">📷 あなたが撮った写真を元に判定しています</p>
+      <div class="fabric-result-thumbs-row">
+        ${state.images.map((img, i) => img
+          ? `<div class="fabric-result-thumb-wrap"><img class="fabric-result-thumb" src="${img}" alt="撮影${i+1}"><span class="fabric-result-thumb-label">${SLOTS[i].label}</span></div>`
+          : '').join('')}
+      </div>
+    </div>`;
+
     return `
 <div class="fabric-screen">
   <div class="fabric-nav">
@@ -260,6 +262,7 @@ const FabricApp = (() => {
   </div>
 
   <div style="padding: 12px 0 0;">
+    ${thumbsHtml}
     <div class="fabric-result-card">
       <p class="fabric-result-label">AI判定結果</p>
       ${materialBadge}
@@ -314,11 +317,6 @@ const FabricApp = (() => {
 
   // ── アクション ──────────────────────────────
 
-  function onNicknameInput(val) {
-    state.nickname = val.trim();
-    localStorage.setItem('fabric_nickname', state.nickname);
-  }
-
   function goTop() {
     state.screen = 'top';
     state.images = [null, null, null];
@@ -372,7 +370,7 @@ const FabricApp = (() => {
       const res = await fetch('/api/fabric-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: state.images, nickname: state.nickname }),
+        body: JSON.stringify({ images: state.images }),
       });
 
       if (!res.ok) {

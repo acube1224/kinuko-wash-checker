@@ -185,6 +185,7 @@ comment および closestReason の説明文には、判定に使用した生地
   "fabricKey": "生地種類のキー または closest_match または unknown",
   "confidence": "判定の確信度を0〜100の整数で返してください。100はあり得ないので最大99としてください。",
   "comment": "判定根拠を400字前後で日本語で説明。生地の特徴（光沢・シボ・織り目・透け感など）を具体的に述べ、判定の根拠と注意点も含めること。unknownの場合は最も近いと思われる生地種類名も日本語で明記すること",
+  "generalName": "fabricKeyがリスト内キー（closest_match・unknown以外）の場合のみ記入。この生地をリストに縛られず社会一般的な名称で表すと何か（日本語で）。リスト名と実質同じ場合はnull。例：seikaなら『パレス縮緬』、habutaeなら『羽二重（はぶたえ）』、chirimennなら『縮緬（ちりめん）』など。リスト名とほぼ同義の場合はnullでよい",
   "closestName": "closest_match時のみ記入。社会一般的な生地名を日本語で（例：フランネル、ニット生地）。それ以外はnull",
   "closestReason": "closest_match時のみ記入。その生地名と判断した理由を400字前後で。それ以外はnull",
   "unknownHint": "unknown時のみ記入。最も近いと思われる生地の種類名を日本語で（例：ニット生地、デニム）。それ以外はnull"

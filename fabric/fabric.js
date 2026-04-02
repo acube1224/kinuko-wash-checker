@@ -258,6 +258,26 @@ const FabricApp = (() => {
       <p class="fabric-closest-reason">💬 ${r.closestReason}</p>
     </div>` : '';
 
+    // 一般名の補足表示（リスト内判定かつgeneralNameがある場合）
+    // 条件：確信度60%以下 OR generalNameがある（リストと異なる一般名）
+    const showGeneralName = !isClosest && !isUnknown && r.generalName &&
+                            typeof r.generalName === 'string';
+    const generalNameHtml = showGeneralName ? `
+    <div style="
+      margin: 8px 16px 0;
+      background: #f0f4ff;
+      border: 1px solid #c8d4f0;
+      border-radius: 12px;
+      padding: 10px 14px;
+    ">
+      <p style="font-size:0.75rem; font-weight:700; color:#5566aa; margin-bottom:4px;">
+        🔎 一般的な呼び名
+      </p>
+      <p style="font-size:0.95rem; font-weight:700; color:#334488;">
+        ${r.generalName}
+      </p>
+    </div>` : '';
+
     // 撮影写真サムネイル
     const thumbsHtml = `
     <div class="fabric-result-thumbs">
@@ -295,6 +315,7 @@ const FabricApp = (() => {
       </div>
     </div>
 
+    ${generalNameHtml}
     ${closestCard}
 
     <p class="fabric-result-notice">

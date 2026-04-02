@@ -232,19 +232,12 @@ const FabricApp = (() => {
       </p>` : '';
     const matInfo = MATERIAL_LABELS[r.materialKey] || MATERIAL_LABELS.other;
 
-    // 確信度を0〜95%の5%ステップで表示（100%はあり得ないため上限95%）
-    // high: 75〜95%、mid: 45〜70%、low: 15〜40%
-    const confRanges = {
-      high: [75, 80, 85],
-      mid:  [45, 50, 55, 60, 65, 70],
-      low:  [15, 20, 25, 30, 35, 40],
-    };
-    const ranges = confRanges[r.confidence] || confRanges.low;
-    // 判定結果のfabricKeyを使ってシード値的に固定（同じ結果なら同じ%）
-    const seedIdx = (r.fabricKey || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
-    const confPct = ranges[seedIdx % ranges.length];
-    const confColor = r.confidence === 'high' ? '#2a7a4b'
-                    : r.confidence === 'mid'  ? '#a0764b'
+    // 確信度を5%ステップに丸め（100%→95%に補正）
+    const rawConf = parseInt(r.confidence, 10);
+    const clampedConf = isNaN(rawConf) ? 50 : Math.min(rawConf, 99);
+    const confPct = Math.min(Math.round(clampedConf / 5) * 5, 95);
+    const confColor = confPct >= 75 ? '#2a7a4b'
+                    : confPct >= 45 ? '#a0764b'
                     : '#999';
     const confLabel = `確信度 ${confPct}%`;
 

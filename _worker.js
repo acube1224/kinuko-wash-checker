@@ -183,7 +183,7 @@ comment および closestReason の説明文には、判定に使用した生地
 {
   "materialKey": "素材カテゴリのキー",
   "fabricKey": "生地種類のキー または closest_match または unknown",
-  "confidence": "high または mid または low",
+  "confidence": "判定の確信度を0〜100の整数で返してください。100はあり得ないので最大99としてください。",
   "comment": "判定根拠を400字前後で日本語で説明。生地の特徴（光沢・シボ・織り目・透け感など）を具体的に述べ、判定の根拠と注意点も含めること。unknownの場合は最も近いと思われる生地種類名も日本語で明記すること",
   "closestName": "closest_match時のみ記入。社会一般的な生地名を日本語で（例：フランネル、ニット生地）。それ以外はnull",
   "closestReason": "closest_match時のみ記入。その生地名と判断した理由を400字前後で。それ以外はnull",
@@ -1092,7 +1092,13 @@ const FABRIC_NAME = {
 const MATERIAL_NAME = {
   silk:'絹', cotton:'綿', linen:'麻', poly:'ポリ', other:'その他'
 };
-const CONF_NAME = { high:'高', mid:'中', low:'低' };
+const CONF_NAME = {}; // 数値をそのまま表示するため不要
+function confLabel(v) {
+  const n = parseInt(v, 10);
+  if (isNaN(n)) return v || '-';
+  const pct = Math.min(Math.round(Math.min(n,99) / 5) * 5, 95);
+  return pct + '%';
+}
 
 let fabricTestFilter = 0;
 let fabricCurrentPage = 1;
@@ -1134,7 +1140,7 @@ async function loadFabricLogs(page) {
         <td>\${MATERIAL_NAME[r.material_key] || r.material_key || '-'}</td>
         <td>\${FABRIC_NAME[r.fabric_key] || r.fabric_key || '-'}</td>
         <td>\${r.closest_fabric_key ? (FABRIC_NAME[r.closest_fabric_key] || r.closest_fabric_key) : '-'}</td>
-        <td>\${CONF_NAME[r.confidence] || r.confidence || '-'}</td>
+        <td>\${confLabel(r.confidence)}</td>
         <td>\${thumb(r.image_url_1)}</td>
         <td>\${thumb(r.image_url_2)}</td>
         <td>\${thumb(r.image_url_3)}</td>
@@ -1226,7 +1232,7 @@ async function loadFabricStats() {
 
   // 確信度分布
   drawPie('chart-conf-dist',
-    d.confDist.map(r => CONF_NAME[r.confidence] || r.confidence),
+    d.confDist.map(r => confLabel(r.confidence)),
     d.confDist.map(r => r.cnt), ['#4a7c6f','#a0764b','#c0392b']);
 
   // 日別

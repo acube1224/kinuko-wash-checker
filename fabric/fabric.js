@@ -15,9 +15,9 @@ const FabricApp = (() => {
 
   // 撮影スロット定義
   const SLOTS = [
-    { label: '全体像',             hint: 'お品全体が画面に収まるように' },
-    { label: '光沢・色味がわかる角度', hint: '斜めから光を当てるように撮影' },
-    { label: '生地の目アップ',      hint: 'できるだけ近寄って撮影' },
+    { label: '生地の目・接写',       hint: '生地の織り目がわかるよう、できるだけ寄って撮影' },
+    { label: '光沢感・マット感',     hint: '斜めから光を当て、光沢感やマット感がわかるように撮影' },
+    { label: '紋様・透け感',         hint: '地紋や透け感がわかる箇所に近寄って撮影（無地の場合は別角度で）' },
   ];
 
   // 生地名マッピング（キー→表示名）
@@ -126,22 +126,22 @@ const FabricApp = (() => {
     <div class="guide-card">
       <div class="guide-card-num">1</div>
       <div class="guide-card-body">
-        <strong>全体像</strong>
-        <span>お品全体が画面に収まるように撮影してください</span>
+        <strong>生地の目・接写</strong>
+        <span>生地の織り目・シボがわかるよう、できるだけ寄って撮影してください</span>
       </div>
     </div>
     <div class="guide-card">
       <div class="guide-card-num">2</div>
       <div class="guide-card-body">
-        <strong>光沢・色味がわかる角度</strong>
-        <span>斜めから光を当てるように撮影すると光沢がわかりやすくなります</span>
+        <strong>光沢感・マット感</strong>
+        <span>斜めから光を当て、光沢感やマット感がはっきりわかるように撮影してください</span>
       </div>
     </div>
     <div class="guide-card">
       <div class="guide-card-num">3</div>
       <div class="guide-card-body">
-        <strong>生地の目アップ</strong>
-        <span>できるだけ近寄って、生地の織り目がわかるように撮影してください</span>
+        <strong>紋様・透け感</strong>
+        <span>地紋や透け感がわかる箇所に近寄って撮影してください（無地の場合は別角度で）</span>
       </div>
     </div>
   </div>

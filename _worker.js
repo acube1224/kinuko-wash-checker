@@ -629,7 +629,7 @@ function renderAdminLogin(error = '') {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>管理画面 | 長襦袢セルフ判定</title>
+<title>管理画面 | 絹子さんチェッカー Ver 2.01</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Noto Sans JP', sans-serif; background: #f5f0eb; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
@@ -682,7 +682,7 @@ function renderAdminApp(request, env, url) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>管理画面 | 長襦袢セルフ判定</title>
+<title>管理画面 | 絹子さんチェッカー Ver 2.01</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -750,8 +750,8 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
 <body>
 
 <header>
-  <h1>🌿 長襦袢セルフ判定 管理画面</h1>
-  <span>Ver 1.50</span>
+  <h1>🌿 絹子さんチェッカー 管理画面</h1>
+  <span>Ver 2.01</span>
 </header>
 
 <div class="tabs">

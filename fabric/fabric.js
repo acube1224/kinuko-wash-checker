@@ -10,7 +10,8 @@ const FabricApp = (() => {
     screen: 'top',   // top | guide | upload | loading | result | error
     images: [null, null, null],  // base64 x3
     result: null,
-
+    loadingTimer: null,
+    loadingSeconds: 0,
   };
 
   // 撮影スロット定義
@@ -206,8 +207,9 @@ const FabricApp = (() => {
 <div class="fabric-screen">
   <div class="fabric-loading">
     <div class="fabric-loading-spinner"></div>
-    <p class="fabric-loading-text">AIが生地を判定中です…</p>
-    <p style="font-size:0.78rem; color:#bbb; margin-top:8px;">しばらくお待ちください</p>
+    <p class="fabric-loading-text">絹子さんAIが判定中…</p>
+    <p id="fabric-loading-timer" style="font-size:1.1rem; font-weight:700; color:#a0764b; margin-top:6px; letter-spacing:0.05em;">${state.loadingSeconds}秒</p>
+    <p style="font-size:0.78rem; color:#bbb; margin-top:4px;">しばらくお待ちください</p>
   </div>
 </div>`;
   }
@@ -229,10 +231,22 @@ const FabricApp = (() => {
         （${r.unknownHint} の可能性）
       </p>` : '';
     const matInfo = MATERIAL_LABELS[r.materialKey] || MATERIAL_LABELS.other;
-    const confLabel = r.confidence === 'high' ? '確信度：高'
-                    : r.confidence === 'mid'  ? '確信度：中'
-                    : '確信度：低';
-    const confDot = r.confidence;
+
+    // 確信度を0〜95%の5%ステップで表示（100%はあり得ないため上限95%）
+    // high: 75〜95%、mid: 45〜70%、low: 15〜40%
+    const confRanges = {
+      high: [75, 80, 85, 90, 95],
+      mid:  [45, 50, 55, 60, 65, 70],
+      low:  [15, 20, 25, 30, 35, 40],
+    };
+    const ranges = confRanges[r.confidence] || confRanges.low;
+    // 判定結果のfabricKeyを使ってシード値的に固定（同じ結果なら同じ%）
+    const seedIdx = (r.fabricKey || '').split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const confPct = ranges[seedIdx % ranges.length];
+    const confColor = r.confidence === 'high' ? '#2a7a4b'
+                    : r.confidence === 'mid'  ? '#a0764b'
+                    : '#999';
+    const confLabel = `確信度 ${confPct}%`;
 
     // 素材カテゴリバッジ
     const materialBadge = `<span style="
@@ -278,8 +292,10 @@ const FabricApp = (() => {
       <p class="fabric-result-name${isClosest ? ' no-match' : ''}">${fabricName}</p>
       ${unknownHintHtml}
       <div class="fabric-confidence">
-        <span class="fabric-confidence-dot ${confDot}"></span>
-        ${confLabel}
+        <span style="font-size:0.85rem; font-weight:700; color:${confColor};">${confLabel}</span>
+        <div style="margin-top:5px; background:#eee; border-radius:6px; height:8px; width:100%; overflow:hidden;">
+          <div style="height:100%; width:${confPct}%; background:${confColor}; border-radius:6px; transition:width 0.6s ease;"></div>
+        </div>
       </div>
       <div class="fabric-comment">
         💬 ${r.comment}
@@ -371,10 +387,29 @@ const FabricApp = (() => {
     reader.readAsDataURL(file);
   }
 
+  // カウントアップタイマー開始
+  function startLoadingTimer() {
+    state.loadingSeconds = 0;
+    state.loadingTimer = setInterval(() => {
+      state.loadingSeconds += 1;
+      const el = document.getElementById('fabric-loading-timer');
+      if (el) el.textContent = state.loadingSeconds + '秒';
+    }, 1000);
+  }
+
+  // カウントアップタイマー停止
+  function stopLoadingTimer() {
+    if (state.loadingTimer) {
+      clearInterval(state.loadingTimer);
+      state.loadingTimer = null;
+    }
+  }
+
   async function startJudge() {
     if (!state.images.every(Boolean)) return;
     state.screen = 'loading';
     render();
+    startLoadingTimer();
 
     try {
       const res = await fetch('/api/fabric-check', {
@@ -395,6 +430,7 @@ const FabricApp = (() => {
       state.errorMsg = e.message;
       state.screen = 'error';
     }
+    stopLoadingTimer();
     render();
   }
 

@@ -397,6 +397,6 @@ const FabricApp = (() => {
     render();
   });
 
-  return { goTop, goGuide, goUpload, onImageSelect, startJudge, goKinuko, onNicknameInput };
+  return { goTop, goGuide, goUpload, onImageSelect, startJudge, goKinuko };
 
 })();

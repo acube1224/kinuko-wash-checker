@@ -338,13 +338,13 @@ const FabricApp = (() => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // 画像をリサイズしてbase64化（APIコスト削減のため最大800px）
+    // 画像をリサイズしてbase64化（精度向上のため最大1280px）
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX = 800;
+        const MAX = 1280;
         let w = img.width, h = img.height;
         if (w > MAX || h > MAX) {
           if (w > h) { h = Math.round(h * MAX / w); w = MAX; }

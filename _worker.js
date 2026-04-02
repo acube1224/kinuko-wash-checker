@@ -134,8 +134,8 @@ function checkAuth(request) {
 async function handleFabricCheck(request, env) {
   try {
     const { images, nickname } = await request.json();
-    if (!images || images.length !== 3) {
-      return Response.json({ error: '画像が3枚必要です' }, { status: 400 });
+    if (!images || images.length < 2 || images.length > 3) {
+      return Response.json({ error: '画像は2〜3枚必要です' }, { status: 400 });
     }
 
     const apiKey = env.GEMINI_API_KEY;
@@ -143,14 +143,25 @@ async function handleFabricCheck(request, env) {
       return Response.json({ error: 'APIキーが設定されていません' }, { status: 500 });
     }
 
-    // base64からdata:image/jpeg;base64, を除去
-    const parts = images.map((img) => {
-      const base64 = img.replace(/^data:image\/\w+;base64,/, '');
-      return { inlineData: { mimeType: 'image/jpeg', data: base64 } };
-    });
+    const hasThirdImage = images.length === 3 && images[2] !== null;
+
+    // base64からdata:image/jpeg;base64, を除去（nullはスキップ）
+    const parts = images
+      .filter((img) => img !== null)
+      .map((img) => {
+        const base64 = img.replace(/^data:image\/\w+;base64,/, '');
+        return { inlineData: { mimeType: 'image/jpeg', data: base64 } };
+      });
+
+    const photoDesc = hasThirdImage
+      ? '添付された長襦袢の写真3枚（①生地の目・接写、②光沢感・マット感がわかる角度、③紋様・透け感がわかる箇所の接写）'
+      : '添付された長襦袢の写真2枚（①生地の目・接写、②光沢感・マット感がわかる角度）';
+    const photoNote = hasThirdImage
+      ? ''
+      : '\n※写真は2枚のみです。透け感・紋様の情報はありませんが、提供された写真の範囲で最善の判定を行ってください。絽・紗（透け感のある夏物）の可能性がある場合はその旨をcommentに記載してください。';
 
     const prompt = `あなたは和服の生地の専門家です。
-添付された長襦袢の写真3枚（①生地の目・接写、②光沢感・マット感がわかる角度、③紋様・透け感がわかる箇所の接写）を見て、素材と生地の種類を判定してください。
+${photoDesc}を見て、素材と生地の種類を判定してください。${photoNote}
 
 【判定ルール1：素材カテゴリ】
 必ず以下の中から1つ選んでください：

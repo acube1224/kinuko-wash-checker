@@ -218,6 +218,40 @@
   height: 100%;
 }
 
+/* 任意スロット（3枚目）の見た目 */
+.upload-slot.optional {
+  border-color: #e0d8d0;
+  background: #fdfcfb;
+}
+
+.upload-slot.optional .upload-slot-num {
+  background: #ede8e3;
+  color: #b8a898;
+}
+
+.upload-slot.optional .upload-slot-info strong {
+  color: #8a7a6a;
+}
+
+.optional-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #8a7a6a;
+  background: #ede8e3;
+  border-radius: 8px;
+  padding: 1px 7px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ガイド画面の任意カード */
+.optional-guide-card {
+  opacity: 0.82;
+  border-color: #ddd5cc;
+  background: #fdfcfb;
+}
+
 /* ── ローディング ── */
 .fabric-loading {
   text-align: center;

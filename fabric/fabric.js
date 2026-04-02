@@ -14,19 +14,22 @@ const FabricApp = (() => {
     loadingSeconds: 0,
   };
 
-  // 撮影スロット定義（新3枚構成）
+  // 撮影スロット定義（1・2枚目必須、3枚目任意）
   const SLOTS = [
     {
-      label: '生地の目・接写',
-      hint:  'できるだけ寄って、織り目・シボがはっきりわかるように撮影',
+      label:    '生地の目・接写',
+      hint:     'できるだけ寄って、織り目・シボがはっきりわかるように撮影',
+      required: true,
     },
     {
-      label: '光沢感・マット感',
-      hint:  '斜めから光を当て、光沢感やマット感がわかるように撮影',
+      label:    '光沢感・マット感',
+      hint:     '斜めから光を当て、光沢感やマット感がわかるように撮影',
+      required: true,
     },
     {
-      label: '紋様・透け感',
-      hint:  '地紋・透け感がわかる箇所を中心に撮影（無地は別角度で）',
+      label:    '紋様・透け感（任意）',
+      hint:     '透け感・地紋がある場合に追加。絽・紗や綸子の判定精度が上がります',
+      required: false,
     },
   ];
 
@@ -129,8 +132,8 @@ const FabricApp = (() => {
     <div style="width:40px;"></div>
   </div>
 
-  <p class="fabric-page-title">3枚の写真を撮影します</p>
-  <p class="fabric-page-sub">それぞれのポイントを押さえて撮影すると、より正確に判定できます。<br>
+  <p class="fabric-page-title">2〜3枚の写真を撮影します</p>
+  <p class="fabric-page-sub">1・2枚目は必須です。3枚目は任意ですが、透け感や地紋がある生地はより正確に判定できます。<br>
     <span style="font-size:0.75rem; color:#bbb;">写真は自動的に正方形にトリミングされます。<br>被写体を中心に撮影してください。</span>
   </p>
 
@@ -138,22 +141,22 @@ const FabricApp = (() => {
     <div class="guide-card">
       <div class="guide-card-num">1</div>
       <div class="guide-card-body">
-        <strong>生地の目・接写</strong>
+        <strong>生地の目・接写 <span style="font-size:0.72rem; color:#a0764b; font-weight:700;">【必須】</span></strong>
         <span>できるだけ寄って撮影し、織り目・シボをはっきり写してください。生地の中心を画面に収めるように撮影します。</span>
       </div>
     </div>
     <div class="guide-card">
       <div class="guide-card-num">2</div>
       <div class="guide-card-body">
-        <strong>光沢感・マット感</strong>
+        <strong>光沢感・マット感 <span style="font-size:0.72rem; color:#a0764b; font-weight:700;">【必須】</span></strong>
         <span>斜めから光を当て、光沢感やマット感がはっきりわかるように撮影してください。光の反射が中心に来るように構図を合わせます。</span>
       </div>
     </div>
-    <div class="guide-card">
-      <div class="guide-card-num">3</div>
+    <div class="guide-card optional-guide-card">
+      <div class="guide-card-num" style="background: linear-gradient(135deg, #b8a898, #8a7a6a);">3</div>
       <div class="guide-card-body">
-        <strong>紋様・透け感</strong>
-        <span>地紋や透け感がわかる箇所を中心に近寄って撮影してください。無地の場合は、素材感がわかる別角度で撮影します。</span>
+        <strong>紋様・透け感 <span style="font-size:0.72rem; color:#8a7a6a; font-weight:700;">【任意】</span></strong>
+        <span>絽・紗など透け感がある生地、または地紋がある生地の場合に追加してください。判定精度が上がります。無地・透けなしの場合は省略できます。</span>
       </div>
     </div>
   </div>
@@ -166,19 +169,23 @@ const FabricApp = (() => {
 
   // アップロード画面
   function renderUpload() {
-    const allReady = state.images.every(img => img !== null);
+    // 必須2枚が揃っていれば判定可能
+    const requiredReady = state.images[0] !== null && state.images[1] !== null;
+    const selectedCount = state.images.filter(Boolean).length;
+
     const slots = SLOTS.map((slot, i) => {
       const hasImg = state.images[i] !== null;
+      const isOptional = !slot.required;
       return `
-      <label class="upload-slot ${hasImg ? 'has-image' : ''}">
+      <label class="upload-slot ${hasImg ? 'has-image' : ''} ${isOptional ? 'optional' : ''}">
         <div class="upload-slot-num">${hasImg ? '✓' : i + 1}</div>
         <div class="upload-slot-info">
-          <strong>${slot.label}</strong>
+          <strong>${slot.label}${isOptional && !hasImg ? ' <span class="optional-badge">任意</span>' : ''}</strong>
           <span>${slot.hint}</span>
         </div>
         ${hasImg
           ? `<img src="${state.images[i]}" class="upload-slot-thumb" alt="撮影画像${i+1}">`
-          : `<span class="upload-slot-add">タップして選択</span>`
+          : `<span class="upload-slot-add">${isOptional ? 'タップして追加' : 'タップして選択'}</span>`
         }
         <input type="file" accept="image/*" capture="environment"
           onchange="FabricApp.onImageSelect(event, ${i})">
@@ -194,8 +201,8 @@ const FabricApp = (() => {
   </div>
 
   <p class="fabric-page-sub" style="padding-top:12px;">
-    3枚すべて選択すると判定できます<br>
-    <span style="font-size:0.78rem; color:#bbb;">（${state.images.filter(Boolean).length}/3 枚選択済み）</span>
+    1・2枚目を撮影すると判定できます<br>
+    <span style="font-size:0.78rem; color:#bbb;">（${selectedCount}/3 枚選択済み）</span>
   </p>
 
   <div class="upload-slots">
@@ -205,7 +212,7 @@ const FabricApp = (() => {
   <div style="padding: 0 16px;">
     <button class="btn-fabric-primary"
       onclick="FabricApp.startJudge()"
-      ${allReady ? '' : 'disabled style="opacity:0.4; cursor:not-allowed;"'}>
+      ${requiredReady ? '' : 'disabled style="opacity:0.4; cursor:not-allowed;"'}>
       AIに判定してもらう
     </button>
   </div>
@@ -434,7 +441,10 @@ const FabricApp = (() => {
   }
 
   async function startJudge() {
-    if (!state.images.every(Boolean)) return;
+    // 必須2枚が揃っていれば判定可能（3枚目は任意）
+    if (!state.images[0] || !state.images[1]) return;
+    // nullを除いた画像のみ送信
+    const imagesToSend = state.images.filter(img => img !== null);
     state.screen = 'loading';
     render();
     startLoadingTimer();
@@ -443,7 +453,7 @@ const FabricApp = (() => {
       const res = await fetch('/api/fabric-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ images: state.images }),
+        body: JSON.stringify({ images: imagesToSend }),
       });
 
       if (!res.ok) {

@@ -52,6 +52,12 @@ function calcJudgment(answers) {
     return buildResult('A', score, chips, detailNotes, answers);
   }
 
+  // ビンテージON かつ 化繊以外 → 最低でもB（スコア3以上を保証）
+  // 化繊はビンテージでも洗えるため除外済み
+  if (answers.optionVintage && score < 3) {
+    score = 3;
+  }
+
   // 正絹の場合：silkFabricの縮緬 → 即C
   if (answers.material === 'silk' && answers.silkFabric === 'chirimen') {
     return buildResult('C', score, chips, detailNotes, answers);

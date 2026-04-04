@@ -78,6 +78,12 @@ export default {
     if (path === '/hibikinu/fabric-bulk-flag' && request.method === 'POST') {
       return handleFabricBulkFlag(request, env);
     }
+    if (path === '/hibikinu/r2-list' && request.method === 'GET') {
+      return handleR2List(request, env);
+    }
+    if (path === '/hibikinu/r2-delete' && request.method === 'POST') {
+      return handleR2Delete(request, env);
+    }
     if (path.startsWith('/hibikinu/')) {
       return renderAdminApp(request, env, url);
     }
@@ -464,6 +470,122 @@ async function handleFabricBulkFlag(request, env) {
 }
 
 /* ============================================================
+   管理API: R2ファイル一覧（D1照合・容量計算）
+   ============================================================ */
+async function handleR2List(request, env) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+  if (!env.kinuko_fabric_images) {
+    return Response.json({ error: 'R2 not configured' }, { status: 500 });
+  }
+
+  // R2から全オブジェクト取得（ページネーション対応）
+  const r2Objects = [];
+  let cursor = undefined;
+  while (true) {
+    const opts = { prefix: 'fabric/', limit: 1000 };
+    if (cursor) opts.cursor = cursor;
+    const listed = await env.kinuko_fabric_images.list(opts);
+    for (const obj of listed.objects) {
+      r2Objects.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded?.toISOString() || null });
+    }
+    if (listed.truncated) {
+      cursor = listed.cursor;
+    } else {
+      break;
+    }
+  }
+
+  // D1から参照中キーを取得
+  let d1Keys = new Set();
+  if (env.kinuko_logs) {
+    const rows = await env.kinuko_logs.prepare(
+      'SELECT image_url_1, image_url_2, image_url_3 FROM fabric_logs WHERE image_url_1 IS NOT NULL OR image_url_2 IS NOT NULL OR image_url_3 IS NOT NULL'
+    ).all();
+    for (const r of (rows.results || [])) {
+      if (r.image_url_1) d1Keys.add(r.image_url_1);
+      if (r.image_url_2) d1Keys.add(r.image_url_2);
+      if (r.image_url_3) d1Keys.add(r.image_url_3);
+    }
+  }
+
+  // 各オブジェクトに参照状態を付与
+  let totalSize = 0;
+  let referencedCount = 0;
+  let orphanCount = 0;
+  const files = r2Objects.map(obj => {
+    const referenced = d1Keys.has(obj.key);
+    totalSize += obj.size;
+    if (referenced) referencedCount++; else orphanCount++;
+    return { key: obj.key, size: obj.size, uploaded: obj.uploaded, referenced };
+  });
+
+  // サイズを見やすく
+  const formatSize = (bytes) => {
+    if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    if (bytes >= 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return bytes + ' B';
+  };
+
+  return Response.json({
+    total: files.length,
+    referenced: referencedCount,
+    orphan: orphanCount,
+    totalSize,
+    totalSizeFormatted: formatSize(totalSize),
+    d1LogCount: d1Keys.size,
+    files
+  });
+}
+
+/* ============================================================
+   管理API: R2ファイル削除（単体 or 孤立一括）
+   ============================================================ */
+async function handleR2Delete(request, env) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+  if (!env.kinuko_fabric_images) {
+    return Response.json({ error: 'R2 not configured' }, { status: 500 });
+  }
+  const { key, deleteOrphans } = await request.json();
+
+  if (deleteOrphans) {
+    // 孤立ファイルを全削除
+    const listed = [];
+    let cursor = undefined;
+    while (true) {
+      const opts = { prefix: 'fabric/', limit: 1000 };
+      if (cursor) opts.cursor = cursor;
+      const r = await env.kinuko_fabric_images.list(opts);
+      listed.push(...r.objects.map(o => o.key));
+      if (r.truncated) { cursor = r.cursor; } else { break; }
+    }
+    // D1参照キー取得
+    let d1Keys = new Set();
+    if (env.kinuko_logs) {
+      const rows = await env.kinuko_logs.prepare(
+        'SELECT image_url_1, image_url_2, image_url_3 FROM fabric_logs'
+      ).all();
+      for (const r of (rows.results || [])) {
+        if (r.image_url_1) d1Keys.add(r.image_url_1);
+        if (r.image_url_2) d1Keys.add(r.image_url_2);
+        if (r.image_url_3) d1Keys.add(r.image_url_3);
+      }
+    }
+    const orphans = listed.filter(k => !d1Keys.has(k));
+    await Promise.all(orphans.map(k => env.kinuko_fabric_images.delete(k)));
+    return Response.json({ success: true, deleted: orphans.length });
+  }
+
+  if (key) {
+    // 単体削除
+    await env.kinuko_fabric_images.delete(key);
+    return Response.json({ success: true, deleted: 1 });
+  }
+
+  return Response.json({ error: 'key or deleteOrphans required' }, { status: 400 });
+}
+
+/* ============================================================
    API: ログ保存
    ============================================================ */
 async function handleSaveLog(request, env) {
@@ -825,6 +947,7 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
   <button class="tab" onclick="showTab('logs')">📋 ログ一覧</button>
   <button class="tab" onclick="showTab('fabric-logs')">🧵 生地ログ</button>
   <button class="tab" onclick="showTab('fabric-stats')">📈 生地統計</button>
+  <button class="tab" onclick="showTab('r2-maint')">🗄 R2メンテ</button>
 </div>
 
 <!-- 統計パネル -->
@@ -931,6 +1054,60 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
   </div>
 </div>
 
+<!-- R2メンテナンスパネル -->
+<div class="panel" id="panel-r2-maint">
+  <!-- 統計バー -->
+  <div id="r2-stat-bar" style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+    <div class="stat-card" style="min-width:120px;">
+      <div class="stat-num" id="r2-total">-</div>
+      <div class="stat-label">総ファイル数</div>
+    </div>
+    <div class="stat-card" style="min-width:120px;">
+      <div class="stat-num" style="color:#4a7c6f;" id="r2-referenced">-</div>
+      <div class="stat-label">✅ 参照中</div>
+    </div>
+    <div class="stat-card" style="min-width:120px;">
+      <div class="stat-num" style="color:#c0392b;" id="r2-orphan">-</div>
+      <div class="stat-label">⚠ 孤立ファイル</div>
+    </div>
+    <div class="stat-card" style="min-width:140px;">
+      <div class="stat-num" id="r2-size">-</div>
+      <div class="stat-label">💾 総容量</div>
+    </div>
+    <div class="stat-card" style="min-width:140px;">
+      <div class="stat-num" id="r2-d1count">-</div>
+      <div class="stat-label">D1ログ参照キー数</div>
+    </div>
+  </div>
+  <!-- 操作バー -->
+  <div style="display:flex;gap:10px;margin-bottom:14px;align-items:center;flex-wrap:wrap;">
+    <button class="btn" id="r2-filter-all" onclick="r2SetFilter('all')" style="background:#4a7c6f;color:#fff;">全ファイル</button>
+    <button class="btn" id="r2-filter-orphan" onclick="r2SetFilter('orphan')">⚠ 孤立のみ</button>
+    <button class="btn" id="r2-filter-ref" onclick="r2SetFilter('referenced')">✅ 参照中のみ</button>
+    <button class="btn btn-red" id="r2-delete-orphans-btn" onclick="r2DeleteAllOrphans()" style="margin-left:auto;">🗑 孤立ファイルを一括削除</button>
+    <button class="btn" onclick="loadR2List()" style="background:#666;color:#fff;">🔄 再読み込み</button>
+  </div>
+  <!-- ファイル一覧 -->
+  <div style="overflow-x:auto;">
+    <table id="r2-table">
+      <thead>
+        <tr>
+          <th style="width:64px;">画像</th>
+          <th>ファイルキー</th>
+          <th style="width:90px;">サイズ</th>
+          <th style="width:160px;">アップロード日時</th>
+          <th style="width:90px;">状態</th>
+          <th style="width:70px;">操作</th>
+        </tr>
+      </thead>
+      <tbody id="r2-tbody">
+        <tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">読み込み中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div id="r2-footer" style="padding:10px 0;font-size:0.85rem;color:#888;"></div>
+</div>
+
 <script>
 const LABEL = ${JSON.stringify(LABEL)};
 
@@ -940,7 +1117,7 @@ function lbl(type, val) {
 
 // ── タブ切り替え ──────────────────────────────────
 function showTab(name) {
-  const TABS = ['stats','logs','fabric-logs','fabric-stats'];
+  const TABS = ['stats','logs','fabric-logs','fabric-stats','r2-maint'];
   document.querySelectorAll('.tab').forEach((t, i) => {
     t.classList.toggle('active', TABS[i] === name);
   });
@@ -950,6 +1127,7 @@ function showTab(name) {
   if (name === 'logs')          loadLogs(1);
   if (name === 'fabric-logs')   loadFabricLogs(1);
   if (name === 'fabric-stats')  loadFabricStats();
+  if (name === 'r2-maint')      loadR2List();
 }
 
 // ── 統計読み込み ──────────────────────────────────
@@ -1376,6 +1554,117 @@ async function loadFabricStats() {
   // 日別
   const dailyRev = [...d.daily].reverse();
   drawBar('chart-fabric-daily', dailyRev.map(r => r.day), dailyRev.map(r => r.cnt));
+}
+
+// ── R2メンテナンス ───────────────────────────────
+let r2Data = [];
+let r2Filter = 'all';
+
+function r2SetFilter(f) {
+  r2Filter = f;
+  ['all','orphan','referenced'].forEach(id => {
+    const btn = document.getElementById('r2-filter-' + id);
+    if (!btn) return;
+    btn.style.background = (id === f) ? '#4a7c6f' : '';
+    btn.style.color       = (id === f) ? '#fff'    : '';
+  });
+  r2RenderTable();
+}
+
+function r2FormatSize(bytes) {
+  if (bytes >= 1024 * 1024 * 1024) return (bytes / (1024*1024*1024)).toFixed(2) + ' GB';
+  if (bytes >= 1024 * 1024)        return (bytes / (1024*1024)).toFixed(2) + ' MB';
+  if (bytes >= 1024)               return (bytes / 1024).toFixed(1) + ' KB';
+  return bytes + ' B';
+}
+
+async function loadR2List() {
+  document.getElementById('r2-tbody').innerHTML =
+    '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">読み込み中...</td></tr>';
+  const res = await fetch('/hibikinu/r2-list', { credentials: 'same-origin' });
+  if (!res.ok) {
+    if (res.status === 401) { location.href = '/hibikinu'; return; }
+    document.getElementById('r2-tbody').innerHTML =
+      '<tr><td colspan="6" style="color:#c00;text-align:center;">読み込みエラー</td></tr>';
+    return;
+  }
+  const d = await res.json();
+  r2Data = d.files || [];
+
+  // 統計バー更新
+  document.getElementById('r2-total').textContent      = d.total;
+  document.getElementById('r2-referenced').textContent = d.referenced;
+  document.getElementById('r2-orphan').textContent     = d.orphan;
+  document.getElementById('r2-size').textContent       = d.totalSizeFormatted;
+  document.getElementById('r2-d1count').textContent    = d.d1LogCount;
+
+  // 孤立ゼロなら一括削除ボタンを非表示
+  const delBtn = document.getElementById('r2-delete-orphans-btn');
+  if (delBtn) delBtn.style.display = d.orphan > 0 ? '' : 'none';
+
+  r2RenderTable();
+}
+
+function r2RenderTable() {
+  const tbody = document.getElementById('r2-tbody');
+  const footer = document.getElementById('r2-footer');
+  let filtered = r2Data;
+  if (r2Filter === 'orphan')      filtered = r2Data.filter(f => !f.referenced);
+  if (r2Filter === 'referenced')  filtered = r2Data.filter(f =>  f.referenced);
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#aaa;">該当ファイルなし</td></tr>';
+    footer.textContent = '';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(f => {
+    const statusBadge = f.referenced
+      ? '<span style="background:#e8f5e9;color:#2e7d32;padding:2px 8px;border-radius:10px;font-size:0.8rem;">✅ 参照中</span>'
+      : '<span style="background:#fdecea;color:#c62828;padding:2px 8px;border-radius:10px;font-size:0.8rem;">⚠ 孤立</span>';
+    const rowBg = f.referenced ? '' : 'style="background:#fff8f8;"';
+    const dt = f.uploaded ? f.uploaded.replace('T',' ').slice(0,16) : '-';
+    const imgUrl = '/api/fabric-image/' + encodeURIComponent(f.key);
+    return '<tr ' + rowBg + '>' +
+      '<td><a href="' + imgUrl + '" target="_blank"><img src="' + imgUrl + '" style="width:52px;height:52px;object-fit:cover;border-radius:4px;" loading="lazy" onerror="this.style.display='none'"></a></td>' +
+      '<td style="font-size:0.78rem;word-break:break-all;">' + f.key + '</td>' +
+      '<td style="text-align:right;font-size:0.85rem;">' + r2FormatSize(f.size) + '</td>' +
+      '<td style="font-size:0.82rem;white-space:nowrap;">' + dt + '</td>' +
+      '<td>' + statusBadge + '</td>' +
+      '<td><button class="btn btn-red btn-sm" onclick="r2DeleteOne(' + JSON.stringify(f.key) + ')">削除</button></td>' +
+    '</tr>';
+  }).join('');
+
+  const totalShown = filtered.reduce((s, f) => s + f.size, 0);
+  footer.textContent = filtered.length + ' 件表示中 / 合計 ' + r2FormatSize(totalShown);
+}
+
+async function r2DeleteOne(key) {
+  if (!confirm('このファイルを削除しますか？\n' + key)) return;
+  const res = await fetch('/hibikinu/r2-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ key })
+  });
+  if (!res.ok) { alert('削除に失敗しました'); return; }
+  await loadR2List();
+}
+
+async function r2DeleteAllOrphans() {
+  const orphanCount = r2Data.filter(f => !f.referenced).length;
+  if (!orphanCount) { alert('孤立ファイルはありません'); return; }
+  if (!confirm(orphanCount + ' 件の孤立ファイルを削除しますか？\nこの操作は取り消せません。')) return;
+  const res = await fetch('/hibikinu/r2-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ deleteOrphans: true })
+  });
+  if (!res.ok) { alert('削除に失敗しました'); return; }
+  const d = await res.json();
+  alert(d.deleted + ' 件を削除しました');
+  await loadR2List();
 }
 
 // ── 初期表示 ─────────────────────────────────────

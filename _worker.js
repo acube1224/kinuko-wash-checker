@@ -1138,32 +1138,38 @@ async function loadFabricLogs(page) {
   }
   const d = await res.json();
   const tbody = document.getElementById('fabric-log-tbody');
+  // 全選択チェックボックスをリセット
+  const checkAll = document.getElementById('fabric-check-all');
+  if (checkAll) checkAll.checked = false;
+  fabricUpdateBulkBar();
+
   if (!d.rows.length) {
-    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:20px;">データなし</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="13" style="text-align:center;padding:20px;">データなし</td></tr>';
   } else {
     tbody.innerHTML = d.rows.map(r => {
       const thumb = (url) => url
-        ? \`<a href="/api/fabric-image/\${encodeURIComponent(url)}" target="_blank">
-            <img src="/api/fabric-image/\${encodeURIComponent(url)}"
-              style="width:48px;height:48px;object-fit:cover;border-radius:4px;"></a>\`
+        ? `<a href="/api/fabric-image/${encodeURIComponent(url)}" target="_blank">
+            <img src="/api/fabric-image/${encodeURIComponent(url)}"
+              style="width:48px;height:48px;object-fit:cover;border-radius:4px;"></a>`
         : '-';
-      return \`<tr>
-        <td>\${r.id}</td>
-        <td style="white-space:nowrap">\${r.created_at?.slice(0,16) || '-'}</td>
-        <td>\${r.nickname || '-'}</td>
-        <td>\${MATERIAL_NAME[r.material_key] || r.material_key || '-'}</td>
-        <td>\${FABRIC_NAME[r.fabric_key] || r.fabric_key || '-'}</td>
-        <td>\${r.closest_fabric_key ? (FABRIC_NAME[r.closest_fabric_key] || r.closest_fabric_key) : '-'}</td>
-        <td>\${confLabel(r.confidence)}</td>
-        <td>\${thumb(r.image_url_1)}</td>
-        <td>\${thumb(r.image_url_2)}</td>
-        <td>\${thumb(r.image_url_3)}</td>
-        <td>\${r.is_test ? '🧪' : '✅'}</td>
+      return `<tr class="${r.is_test ? 'test-row' : ''}">
+        <td><input type="checkbox" class="fabric-row-check" value="${r.id}" onchange="fabricUpdateBulkBar()"></td>
+        <td>${r.id}</td>
+        <td style="white-space:nowrap">${r.created_at?.slice(0,16) || '-'}</td>
+        <td>${r.nickname || '-'}</td>
+        <td>${MATERIAL_NAME[r.material_key] || r.material_key || '-'}</td>
+        <td>${FABRIC_NAME[r.fabric_key] || r.fabric_key || '-'}</td>
+        <td>${r.closest_fabric_key ? (FABRIC_NAME[r.closest_fabric_key] || r.closest_fabric_key) : '-'}</td>
+        <td>${confLabel(r.confidence)}</td>
+        <td>${thumb(r.image_url_1)}</td>
+        <td>${thumb(r.image_url_2)}</td>
+        <td>${thumb(r.image_url_3)}</td>
+        <td>${r.is_test ? '🧪' : '✅'}</td>
         <td>
-          <button class="btn btn-sm" onclick="toggleFabricTest(\${r.id}, \${r.is_test})">\${r.is_test ? '本番へ' : 'テストへ'}</button>
-          <button class="btn btn-red btn-sm" onclick="deleteFabricLog(\${r.id})">削除</button>
+          <button class="btn btn-sm" onclick="toggleFabricTest(${r.id}, ${r.is_test})">${r.is_test ? '本番へ' : 'テストへ'}</button>
+          <button class="btn btn-red btn-sm" onclick="deleteFabricLog(${r.id})">削除</button>
         </td>
-      </tr>\`;
+      </tr>`;
     }).join('');
   }
   // ページャー

@@ -1640,7 +1640,7 @@ function r2RenderTable() {
 }
 
 async function r2DeleteOne(key) {
-  if (!confirm('このファイルを削除しますか？\n' + key)) return;
+  if (!confirm('このファイルを削除しますか？ ' + key)) return;
   const res = await fetch('/hibikinu/r2-delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1654,7 +1654,7 @@ async function r2DeleteOne(key) {
 async function r2DeleteAllOrphans() {
   const orphanCount = r2Data.filter(f => !f.referenced).length;
   if (!orphanCount) { alert('孤立ファイルはありません'); return; }
-  if (!confirm(orphanCount + ' 件の孤立ファイルを削除しますか？\nこの操作は取り消せません。')) return;
+  if (!confirm(orphanCount + ' 件の孤立ファイルを削除しますか？ この操作は取り消せません。')) return;
   const res = await fetch('/hibikinu/r2-delete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

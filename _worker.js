@@ -391,6 +391,18 @@ async function handleFabricAdminStats(request, env) {
 async function handleFabricAdminDelete(request, env) {
   if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
   const { id } = await request.json();
+
+  // R2画像キーをD1から取得してから削除
+  if (env.kinuko_fabric_images) {
+    const row = await env.kinuko_logs.prepare(
+      `SELECT image_url_1, image_url_2, image_url_3 FROM fabric_logs WHERE id = ?`
+    ).bind(id).first();
+    if (row) {
+      const keys = [row.image_url_1, row.image_url_2, row.image_url_3].filter(Boolean);
+      await Promise.all(keys.map(k => env.kinuko_fabric_images.delete(k)));
+    }
+  }
+
   await env.kinuko_logs.prepare(`DELETE FROM fabric_logs WHERE id = ?`).bind(id).run();
   return Response.json({ success: true });
 }
@@ -415,6 +427,20 @@ async function handleFabricBulkDelete(request, env) {
     return Response.json({ error: 'No IDs provided' }, { status: 400 });
   }
   const placeholders = ids.map(() => '?').join(',');
+
+  // R2画像キーをD1から取得してから削除
+  if (env.kinuko_fabric_images) {
+    const rows = await env.kinuko_logs.prepare(
+      `SELECT image_url_1, image_url_2, image_url_3 FROM fabric_logs WHERE id IN (${placeholders})`
+    ).bind(...ids).all();
+    const keys = (rows.results || []).flatMap(r =>
+      [r.image_url_1, r.image_url_2, r.image_url_3].filter(Boolean)
+    );
+    if (keys.length > 0) {
+      await Promise.all(keys.map(k => env.kinuko_fabric_images.delete(k)));
+    }
+  }
+
   await env.kinuko_logs.prepare(
     `DELETE FROM fabric_logs WHERE id IN (${placeholders})`
   ).bind(...ids).run();

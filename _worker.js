@@ -1626,7 +1626,7 @@ function r2RenderTable() {
     const dt = f.uploaded ? f.uploaded.replace('T',' ').slice(0,16) : '-';
     const imgUrl = '/api/fabric-image/' + encodeURIComponent(f.key);
     return '<tr ' + rowBg + '>' +
-      '<td><a href="' + imgUrl + '" target="_blank"><img src="' + imgUrl + '" style="width:52px;height:52px;object-fit:cover;border-radius:4px;" loading="lazy" onerror="this.style.display='none'"></a></td>' +
+      '<td><a href="' + imgUrl + '" target="_blank"><img src="' + imgUrl + '" style="width:52px;height:52px;object-fit:cover;border-radius:4px;" loading="lazy" onerror="this.style.display=&quot;none&quot;"></a></td>' +
       '<td style="font-size:0.78rem;word-break:break-all;">' + f.key + '</td>' +
       '<td style="text-align:right;font-size:0.85rem;">' + r2FormatSize(f.size) + '</td>' +
       '<td style="font-size:0.82rem;white-space:nowrap;">' + dt + '</td>' +

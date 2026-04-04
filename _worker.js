@@ -72,6 +72,12 @@ export default {
     if (path === '/hibikinu/fabric-flag' && request.method === 'POST') {
       return handleFabricAdminFlag(request, env);
     }
+    if (path === '/hibikinu/fabric-bulk-delete' && request.method === 'POST') {
+      return handleFabricBulkDelete(request, env);
+    }
+    if (path === '/hibikinu/fabric-bulk-flag' && request.method === 'POST') {
+      return handleFabricBulkFlag(request, env);
+    }
     if (path.startsWith('/hibikinu/')) {
       return renderAdminApp(request, env, url);
     }
@@ -397,6 +403,38 @@ async function handleFabricAdminFlag(request, env) {
   const { id, is_test } = await request.json();
   await env.kinuko_logs.prepare(`UPDATE fabric_logs SET is_test = ? WHERE id = ?`).bind(is_test, id).run();
   return Response.json({ success: true });
+}
+
+/* ============================================================
+   管理API: 生地ログ 一括削除
+   ============================================================ */
+async function handleFabricBulkDelete(request, env) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+  const { ids } = await request.json();
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return Response.json({ error: 'No IDs provided' }, { status: 400 });
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  await env.kinuko_logs.prepare(
+    `DELETE FROM fabric_logs WHERE id IN (${placeholders})`
+  ).bind(...ids).run();
+  return Response.json({ success: true, deleted: ids.length });
+}
+
+/* ============================================================
+   管理API: 生地ログ 一括テストフラグ切り替え
+   ============================================================ */
+async function handleFabricBulkFlag(request, env) {
+  if (!checkAuth(request)) return new Response('Unauthorized', { status: 401 });
+  const { ids, is_test } = await request.json();
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return Response.json({ error: 'No IDs provided' }, { status: 400 });
+  }
+  const placeholders = ids.map(() => '?').join(',');
+  await env.kinuko_logs.prepare(
+    `UPDATE fabric_logs SET is_test = ? WHERE id IN (${placeholders})`
+  ).bind(is_test, ...ids).run();
+  return Response.json({ success: true, updated: ids.length });
 }
 
 /* ============================================================
@@ -831,10 +869,17 @@ tr.test-row td { background: #fff8f0; color: #aaa; }
     <button class="btn" id="fabric-btn-real" onclick="setFabricTestFilter(0)" style="background:#4a7c6f;color:#fff;">本番のみ</button>
     <button class="btn" id="fabric-btn-test" onclick="setFabricTestFilter(1)">テストのみ</button>
   </div>
+  <div id="fabric-bulk-bar" style="display:none;padding:8px 12px;background:#fff8e1;border:1px solid #f0c040;border-radius:6px;margin-bottom:8px;align-items:center;gap:10px;">
+    <span id="fabric-bulk-count" style="font-size:0.9rem;font-weight:600;">0件選択中</span>
+    <button class="btn" style="background:#4a7c6f;color:#fff;" onclick="fabricBulkSetFlag(0)">✅ 一括本番へ</button>
+    <button class="btn" style="background:#a0764b;color:#fff;" onclick="fabricBulkSetFlag(1)">🧪 一括テストへ</button>
+    <button class="btn btn-red" onclick="fabricBulkDelete()">🗑 一括削除</button>
+  </div>
   <div style="overflow-x:auto;">
     <table>
       <thead>
         <tr>
+          <th><input type="checkbox" id="fabric-check-all" onchange="fabricToggleAll(this)"></th>
           <th>ID</th><th>日時</th><th>ニックネーム</th>
           <th>素材</th><th>生地</th><th>候補</th>
           <th>確信度</th><th>画像1</th><th>画像2</th><th>画像3</th>
@@ -1127,6 +1172,53 @@ function setFabricTestFilter(v) {
   loadFabricLogs(1);
 }
 
+function fabricToggleAll(cb) {
+  document.querySelectorAll('.fabric-row-check').forEach(c => c.checked = cb.checked);
+  fabricUpdateBulkBar();
+}
+
+function fabricUpdateBulkBar() {
+  const checked = document.querySelectorAll('.fabric-row-check:checked');
+  const bar = document.getElementById('fabric-bulk-bar');
+  const cnt = document.getElementById('fabric-bulk-count');
+  if (!bar) return;
+  if (checked.length > 0) {
+    bar.style.display = 'flex';
+    cnt.textContent = checked.length + '件選択中';
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+async function fabricBulkSetFlag(is_test) {
+  const ids = [...document.querySelectorAll('.fabric-row-check:checked')].map(c => parseInt(c.value));
+  if (!ids.length) return;
+  const label = is_test ? 'テスト' : '本番';
+  if (!confirm(ids.length + '件を「' + label + '」に切り替えますか？')) return;
+  const res = await fetch('/hibikinu/fabric-bulk-flag', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ ids, is_test })
+  });
+  if (!res.ok) { alert('エラーが発生しました'); return; }
+  loadFabricLogs(fabricCurrentPage);
+}
+
+async function fabricBulkDelete() {
+  const ids = [...document.querySelectorAll('.fabric-row-check:checked')].map(c => parseInt(c.value));
+  if (!ids.length) return;
+  if (!confirm(ids.length + '件を削除しますか？この操作は取り消せません。')) return;
+  const res = await fetch('/hibikinu/fabric-bulk-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+    body: JSON.stringify({ ids })
+  });
+  if (!res.ok) { alert('エラーが発生しました'); return; }
+  loadFabricLogs(fabricCurrentPage);
+}
+
 async function loadFabricLogs(page) {
   fabricCurrentPage = page;
   const offset = (page - 1) * FABRIC_PER_PAGE;
@@ -1148,28 +1240,28 @@ async function loadFabricLogs(page) {
   } else {
     tbody.innerHTML = d.rows.map(r => {
       const thumb = (url) => url
-        ? `<a href="/api/fabric-image/${encodeURIComponent(url)}" target="_blank">
-            <img src="/api/fabric-image/${encodeURIComponent(url)}"
-              style="width:48px;height:48px;object-fit:cover;border-radius:4px;"></a>`
+        ? \`<a href="/api/fabric-image/\${encodeURIComponent(url)}" target="_blank">
+            <img src="/api/fabric-image/\${encodeURIComponent(url)}"
+              style="width:48px;height:48px;object-fit:cover;border-radius:4px;"></a>\`
         : '-';
-      return `<tr class="${r.is_test ? 'test-row' : ''}">
-        <td><input type="checkbox" class="fabric-row-check" value="${r.id}" onchange="fabricUpdateBulkBar()"></td>
-        <td>${r.id}</td>
-        <td style="white-space:nowrap">${r.created_at?.slice(0,16) || '-'}</td>
-        <td>${r.nickname || '-'}</td>
-        <td>${MATERIAL_NAME[r.material_key] || r.material_key || '-'}</td>
-        <td>${FABRIC_NAME[r.fabric_key] || r.fabric_key || '-'}</td>
-        <td>${r.closest_fabric_key ? (FABRIC_NAME[r.closest_fabric_key] || r.closest_fabric_key) : '-'}</td>
-        <td>${confLabel(r.confidence)}</td>
-        <td>${thumb(r.image_url_1)}</td>
-        <td>${thumb(r.image_url_2)}</td>
-        <td>${thumb(r.image_url_3)}</td>
-        <td>${r.is_test ? '🧪' : '✅'}</td>
+      return \`<tr class="\${r.is_test ? 'test-row' : ''}">
+        <td><input type="checkbox" class="fabric-row-check" value="\${r.id}" onchange="fabricUpdateBulkBar()"></td>
+        <td>\${r.id}</td>
+        <td style="white-space:nowrap">\${r.created_at?.slice(0,16) || '-'}</td>
+        <td>\${r.nickname || '-'}</td>
+        <td>\${MATERIAL_NAME[r.material_key] || r.material_key || '-'}</td>
+        <td>\${FABRIC_NAME[r.fabric_key] || r.fabric_key || '-'}</td>
+        <td>\${r.closest_fabric_key ? (FABRIC_NAME[r.closest_fabric_key] || r.closest_fabric_key) : '-'}</td>
+        <td>\${confLabel(r.confidence)}</td>
+        <td>\${thumb(r.image_url_1)}</td>
+        <td>\${thumb(r.image_url_2)}</td>
+        <td>\${thumb(r.image_url_3)}</td>
+        <td>\${r.is_test ? '🧪' : '✅'}</td>
         <td>
-          <button class="btn btn-sm" onclick="toggleFabricTest(${r.id}, ${r.is_test})">${r.is_test ? '本番へ' : 'テストへ'}</button>
-          <button class="btn btn-red btn-sm" onclick="deleteFabricLog(${r.id})">削除</button>
+          <button class="btn btn-sm" onclick="toggleFabricTest(\${r.id}, \${r.is_test})">\${r.is_test ? '本番へ' : 'テストへ'}</button>
+          <button class="btn btn-red btn-sm" onclick="deleteFabricLog(\${r.id})">削除</button>
         </td>
-      </tr>`;
+      </tr>\`;
     }).join('');
   }
   // ページャー
